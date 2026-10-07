@@ -8,8 +8,9 @@ Estado: **borrador pendiente de tu aprobación**. No hay código de la aplicaci�
 |---|---|
 | Coste máximo por imagen | hasta 0,10 € |
 | Cuentas | sí, obligatorias para generar |
-| Monetización | créditos con Stripe (pago único), 3 generaciones gratis por usuario registrado, alta resolución y stencil como compra aparte |
-| B2B | arquitectura preparada (estudios, marca blanca, directorio por ciudad); **no se construye** en las fases 1-5 |
+| Monetización | 3 generaciones gratis por usuario registrado; 1 generación = 1 crédito (incluye sus 3 variantes), regenerar cuesta otro crédito; packs de créditos con Stripe Checkout; marca de agua en lo gratuito; alta resolución y stencil aparte (compra o créditos) |
+| B2B | **se construye en la fase 5**: cuentas de estudio con varios tatuadores, suscripción mensual, modo estudio, marca blanca, widget, catálogo de flash, directorio por ciudad y panel de estadísticas |
+| Administración | panel de admin (usuarios, créditos, ingresos, coste de IA y margen, regalar o quitar créditos, gestionar estudios) en la fase 5 |
 | Hosting | Cloudflare |
 
 ## 2. Stack propuesto (cambia respecto al prompt por Cloudflare)
@@ -72,7 +73,16 @@ Prompts: un único módulo versionado `src/prompts/v1/` con plantillas por estil
 - `jobs` (id, user_id, estado [`queued`, `running`, `done`, `failed`, `cancelled`], opciones JSON, claves R2, error, expira_en)
 - `assets` (id, job_id, tipo [`photo`, `mask`, `design`, `variant`], clave_r2, expira_en)
 - `purchases` (id, user_id, producto [`credits_pack`, `hires`, `stencil`], stripe_session_id, estado)
-- Preparado para B2B, sin usar aún: `organizations` (nombre, logo, ciudad, slug), `memberships` (org_id, user_id, rol) y `jobs.org_id` nullable.
+- `stripe_events` (event_id único): idempotencia del webhook; un evento repetido no suma créditos dos veces.
+- `price_config` (o archivo `pricing.ts`): packs de créditos, planes de estudio y precios de HD/stencil; nada de precios fijos en el código.
+- B2B (fase 5, pero con `jobs.org_id` nullable desde la fase 1 para no migrar después):
+  - `organizations` (nombre, slug, logo, colores, ciudad, plan, estado de suscripción)
+  - `memberships` (org_id, user_id, rol [`owner`, `artist`])
+  - `org_usage` (org_id, mes, generaciones usadas, cupo)
+  - `flash_designs` (org_id, imagen, nombre, estilo)
+  - `directory_listings` (org_id, ciudad, destacado)
+  - `leads` (user_id, org_id, job_id, tipo [`contact`, `booking`], consentimiento, creado_en): cada contacto queda registrado para poder facturarlo
+- `users.role` (`user`, `admin`) para el panel de administración.
 
 Reglas: la reserva de crédito y el reembolso si el trabajo falla se hacen en la misma transacción que cambia el estado del trabajo, para no cobrar dos veces ni perder créditos.
 
@@ -109,6 +119,37 @@ Por cada 1.000 usuarios registrados, solo con la parte gratuita (3 generaciones 
 
 A esto se suman infraestructura (Workers de pago ~5 $/mes, R2 y D1 con coste marginal casi nulo a esta escala), email transaccional y comisiones de Stripe sobre las ventas. El precio de los packs de créditos debe cubrir al menos ~0,14 $ por crédito más la comisión de Stripe.
 
+## 6 bis. Monetización y márgenes
+
+Con 1 generación = 1 crédito ≈ 0,14 $ ≈ 0,13 € de coste de IA (sección 6), y sin contar la comisión de Stripe (alrededor de 1,5 % + 0,25 € en tarjetas europeas, verificar) ni el IVA:
+
+| Pack de créditos | Precio | €/crédito | Margen bruto aprox. sobre IA |
+|---|---|---|---|
+| 10 créditos | 4,99 € | 0,50 € | ~74 % |
+| 30 créditos | 9,99 € | 0,33 € | ~61 % |
+| 75 créditos | 19,99 € | 0,27 € | ~51 % |
+
+Planes de estudio, suponiendo que usan todo su cupo:
+
+| Plan | Precio/mes | Generaciones | Coste de IA aprox. | Margen bruto aprox. |
+|---|---|---|---|---|
+| Básico | 29 € | 100 | ~13 € | ~55 % |
+| Pro | 59 € | 300 | ~39 € | ~34 % |
+| Premium | 99 € | 800 | ~104 € | **negativo (~-5 %)** |
+
+**Aviso:** con el coste actual de 4 llamadas por generación, el plan Premium pierde dinero si el estudio gasta el cupo entero, y la oferta de lanzamiento (mes gratis y 50 % de descuento de por vida) empeora los tres planes. Antes de fijar precios habría que medir el coste real por generación y decidir una de estas vías: bajar el cupo de Premium, subir su precio, o cobrar las generaciones extra. Por eso los precios y cupos van en configuración, no en el código.
+
+Reglas de implementación:
+- Los créditos se suman **solo** cuando llega el webhook de Stripe `checkout.session.completed`, con idempotencia por `event_id`.
+- El saldo siempre se calcula desde `credit_ledger`; la interfaz lo muestra en la cabecera y el historial de compras va en el perfil.
+- Marca de agua discreta en los resultados gratuitos, aplicada en el servidor al servir la imagen, no en el cliente. La versión HD sin marca y el stencil se generan y sirven solo tras comprobar la compra o el gasto de créditos.
+- Paywall al agotar las 3 pruebas, con los packs y sin presión agresiva.
+- IVA con Stripe Tax y factura descargable (activar la generación de facturas en Checkout).
+- Antifraude de cuentas falsas: email verificado o Google, Turnstile y límite por IP y dispositivo. Un límite por huella de dispositivo no es infalible; se valora el riesgo en la fase 6.
+- Suscripciones de estudio con Stripe Billing: cupo mensual en `org_usage`, que se reinicia con la renovación (evento `invoice.paid`).
+- Contactos con estudios: solo se comparten datos del usuario con su consentimiento explícito en el momento del contacto, y se registra en `leads`. Cobrar por contacto exige que el estudio lo acepte en sus condiciones.
+- Widget embebible: iframe con su propio origen y política CSP restrictiva, y clave pública por estudio con lista de dominios permitidos.
+
 ## 7. Privacidad, seguridad y legal
 
 - Consentimiento explícito antes de subir fotos; aviso de privacidad visible; "Simulación orientativa; el resultado real depende del tatuador".
@@ -123,10 +164,11 @@ A esto se suman infraestructura (Workers de pago ~5 $/mes, R2 y D1 con coste mar
 1. Landing + cuentas + subida de foto + editor de máscara/colocación (sin IA).
 2. Generación del diseño con `MockProvider`, luego con el proveedor real.
 3. Aplicación sobre la piel, 3 variantes y deslizador antes/después.
-4. Créditos, Stripe, descarga (alta resolución y stencil como compra aparte), historial, borrado.
-5. Rate limiting, moderación, tests e2e, pulido visual y despliegue en Cloudflare.
+4. Registro, 3 pruebas gratis, créditos y pagos con Stripe, marca de agua, descarga HD y stencil, historial, privacidad y borrado automático.
+5. Plan para estudios (cuentas, suscripción, modo estudio, marca blanca, widget, catálogo de flash, directorio y estadísticas) y panel de administración.
+6. Rate limiting, moderación, tests e2e, pulido visual final y despliegue en Cloudflare.
 
-Fuera de alcance por ahora: panel de estudios, marca blanca y directorio por ciudad (solo el esquema preparado).
+El despliegue es en Cloudflare (no Vercel), según lo que me dijiste. La fase 5 es la más grande; si hay que recortar, el orden de prioridad que propongo es: cuentas de estudio y suscripción, modo estudio, panel de admin, y después marca blanca, widget, catálogo y directorio.
 
 ## 9. Riesgos
 
@@ -142,7 +184,8 @@ Fuera de alcance por ahora: panel de estudios, marca blanca y directorio por ciu
 ## 10. Preguntas pendientes
 
 1. ¿Aceptas el stack de Cloudflare (D1 + R2 + Queues) en lugar de Supabase?
-2. ¿Qué cuenta como "una generación gratis": diseño + 3 variantes (~0,14 $) o una versión más barata (sección 6)?
-3. ¿Precio orientativo de los packs de créditos y de la compra de alta resolución y stencil?
-4. ¿Tienes dominio y cuenta de Cloudflare, y un proveedor de email (Resend u otro)?
-5. ¿Alguna restricción legal ya acordada (aviso, política de privacidad redactada)?
+2. Una generación = 1 crédito con sus 3 variantes (resuelto, ver sección 6 bis). ¿Quieres reducir el coste con calidad baja en el diseño o con 2 variantes?
+3. ¿Qué precio tienen la descarga HD y el stencil, y cuántos créditos cuestan si se pagan con créditos?
+4. El plan Premium de estudios pierde dinero con el coste actual (sección 6 bis). ¿Bajamos su cupo, subimos el precio o cobramos extras?
+5. ¿Tienes dominio y cuenta de Cloudflare, y un proveedor de email (Resend u otro)?
+6. ¿Alguna restricción legal ya acordada (aviso, política de privacidad redactada)?
