@@ -15,6 +15,7 @@ interface CloudflareEnv {
   EMAIL_FROM?: string;
   STRIPE_SECRET_KEY?: string;
   STRIPE_WEBHOOK_SECRET?: string;
+  STRIPE_AUTOMATIC_TAX?: string;
   GOOGLE_CLIENT_ID?: string;
   GOOGLE_CLIENT_SECRET?: string;
   TURNSTILE_SECRET?: string;

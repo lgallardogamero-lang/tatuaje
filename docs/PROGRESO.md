@@ -19,3 +19,11 @@ Se actualiza en cada hito. Nada de lo hecho hasta ahora ha costado dinero.
 
 ## Decisión de negocio tomada
 - El plan Premium de estudios tiene cupo 400 en `src/lib/config.ts` (tu plan decía 800). Con el coste actual de IA, 800 generaciones por 99 € pierden dinero. Es un valor de configuración; cámbialo cuando midamos el coste real.
+- [x] API: auth (enlace mágico, Google sin probar), trabajos, archivos con control de acceso, desbloqueo HD/stencil, checkout y webhook de Stripe, borrado de fotos y de cuenta
+- [x] Sistema de diseño y landing (hero con tatuaje que se traza sobre piel, estilos, precios, FAQ), revisada con capturas en escritorio y móvil
+- [x] 26 pruebas pasando (incluye firma y idempotencia de Stripe)
+
+## Notas técnicas
+- TypeScript fijado en 5.9: Next 15 no soporta TypeScript 7.
+- `next.config.mjs` en vez de `.ts` por el mismo motivo.
+- Los generadores de la galería y del proveedor simulado son SVG ilustrativos, no representan la calidad de la IA real.

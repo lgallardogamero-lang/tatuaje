@@ -1,0 +1,146 @@
+@import "tailwindcss";
+
+@theme {
+  --color-ink: #0e1014;
+  --color-panel: #161922;
+  --color-panel-2: #1d212c;
+  --color-line: #2a2e3a;
+  --color-bone: #ece7dc;
+  --color-mute: #9a9ba3;
+  --color-stencil: #a58bff;
+  --color-stencil-deep: #6f55d6;
+  --color-skin: #c98f6b;
+  --color-danger: #ee8a80;
+  --color-ok: #8fd3a5;
+  --font-display: "Gloock", "Times New Roman", serif;
+  --font-sans: "Hanken Grotesk Variable", system-ui, sans-serif;
+  --radius-ctl: 6px;
+}
+
+:root {
+  color-scheme: dark;
+}
+
+html {
+  background: var(--color-ink);
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--color-ink);
+  color: var(--color-bone);
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100dvh;
+}
+
+/* Grano de papel sutil sobre toda la web */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 100;
+  opacity: 0.05;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  mix-blend-mode: overlay;
+}
+
+h1, h2, h3, .display {
+  font-family: var(--font-display);
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  line-height: 1.05;
+  text-wrap: balance;
+}
+
+p { text-wrap: pretty; }
+
+:focus-visible {
+  outline: 2px solid var(--color-stencil);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+::selection { background: var(--color-stencil-deep); color: white; }
+
+.wrap { width: min(100% - 2rem, 76rem); margin-inline: auto; }
+.measure { max-width: 62ch; }
+
+@layer components {
+/* Botones */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: .6rem;
+  min-height: 3rem; padding: .7rem 1.4rem; border-radius: var(--radius-ctl);
+  font-weight: 600; font-size: 1rem; line-height: 1; cursor: pointer;
+  border: 1px solid transparent; transition: background-color .18s, border-color .18s, transform .18s, color .18s;
+  text-decoration: none; white-space: nowrap;
+}
+.btn:active { transform: translateY(1px); }
+.btn:disabled, .btn[aria-disabled="true"] { opacity: .45; cursor: not-allowed; }
+.btn-primary { background: var(--color-stencil); color: #14102b; }
+.btn-primary:hover:not(:disabled) { background: #bba8ff; }
+.btn-ghost { border-color: var(--color-line); color: var(--color-bone); background: transparent; }
+.btn-ghost:hover:not(:disabled) { border-color: var(--color-stencil); color: white; }
+.btn-quiet { color: var(--color-mute); padding-inline: .5rem; min-height: 2.5rem; background: transparent; }
+.btn-quiet:hover { color: var(--color-bone); }
+.btn-sm { min-height: 2.5rem; padding: .5rem 1rem; font-size: .9rem; }
+
+/* Campos */
+.field { display: grid; gap: .45rem; }
+.field > label, .label { font-size: .9rem; font-weight: 600; color: var(--color-bone); }
+.hint { font-size: .85rem; color: var(--color-mute); }
+.input, .textarea, .select {
+  width: 100%; background: var(--color-panel); color: var(--color-bone);
+  border: 1px solid var(--color-line); border-radius: var(--radius-ctl);
+  padding: .8rem .95rem; font: inherit; min-height: 3rem;
+  transition: border-color .15s;
+}
+.input::placeholder, .textarea::placeholder { color: #6d6f79; }
+.input:hover, .textarea:hover, .select:hover { border-color: #3b4050; }
+.input:focus-visible, .textarea:focus-visible, .select:focus-visible { border-color: var(--color-stencil); outline-offset: 0; }
+.textarea { resize: vertical; min-height: 6.5rem; }
+
+/* Opciones elegibles (estilos, tamaños) */
+.chip {
+  display: inline-flex; align-items: center; gap: .5rem; padding: .55rem .95rem; min-height: 2.75rem;
+  border: 1px solid var(--color-line); border-radius: 999px; background: transparent; color: var(--color-bone);
+  cursor: pointer; font: inherit; font-size: .95rem; transition: border-color .15s, background-color .15s;
+}
+.chip:hover { border-color: #4a5063; }
+.chip[aria-pressed="true"], .chip[aria-checked="true"] { border-color: var(--color-stencil); background: rgb(165 139 255 / .14); color: white; }
+
+/* Superficies */
+.panel { background: var(--color-panel); border: 1px solid var(--color-line); border-radius: 10px; }
+.rule { border: 0; border-top: 1px solid var(--color-line); }
+.link { color: var(--color-stencil); text-underline-offset: 3px; text-decoration: underline; }
+.link:hover { color: #c6b8ff; }
+
+.notice { border-left: 3px solid var(--color-stencil); padding: .6rem .9rem; background: rgb(165 139 255 / .08); font-size: .92rem; }
+.notice.error { border-color: var(--color-danger); background: rgb(238 138 128 / .08); }
+.notice.ok { border-color: var(--color-ok); background: rgb(143 211 165 / .08); }
+
+}
+
+/* Hero: trazo de stencil que se dibuja y se asienta como tinta */
+.draw { stroke-dasharray: 1; stroke-dashoffset: 1; animation: draw 2.4s cubic-bezier(.55,.1,.25,1) .5s forwards, settle .9s ease 3.1s forwards; }
+.draw.late { animation-delay: .9s, 3.2s; }
+@keyframes draw { to { stroke-dashoffset: 0; } }
+@keyframes settle { to { stroke: #1b1830; } }
+.dot-in { opacity: 0; animation: fade .5s ease 2.2s forwards, settle .9s ease 3.1s forwards; }
+@keyframes fade { to { opacity: 1; } }
+
+/* Tinta que se dibuja durante la generación */
+.ink-run { stroke-dasharray: 1; stroke-dashoffset: 1; animation: draw 2.8s cubic-bezier(.5,.1,.3,1) infinite alternate; }
+
+.skeleton { background: linear-gradient(100deg, var(--color-panel) 30%, var(--color-panel-2) 50%, var(--color-panel) 70%); background-size: 200% 100%; animation: shimmer 1.4s linear infinite; border-radius: 8px; }
+@keyframes shimmer { to { background-position: -200% 0; } }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { animation-duration: .001ms !important; animation-delay: 0ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; }
+  .draw { stroke-dashoffset: 0; stroke: #1b1830; }
+  .dot-in { opacity: 1; }
+}
