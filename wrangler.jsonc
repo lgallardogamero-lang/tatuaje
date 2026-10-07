@@ -1,0 +1,23 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "tatuaje",
+  "main": "worker.ts",
+  "compatibility_date": "2025-06-01",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "assets": { "directory": ".open-next/assets", "binding": "ASSETS" },
+  "d1_databases": [
+    { "binding": "DB", "database_name": "tatuaje", "database_id": "REEMPLAZAR-con-wrangler-d1-create", "migrations_dir": "migrations" }
+  ],
+  "r2_buckets": [{ "binding": "BUCKET", "bucket_name": "tatuaje-uploads" }],
+  "queues": {
+    "producers": [{ "binding": "JOBS", "queue": "tatuaje-jobs" }],
+    "consumers": [{ "queue": "tatuaje-jobs", "max_batch_size": 1, "max_retries": 2 }]
+  },
+  "triggers": { "crons": ["0 * * * *"] },
+  "services": [{ "binding": "WORKER_SELF_REFERENCE", "service": "tatuaje" }],
+  "vars": {
+    "APP_URL": "http://localhost:3000",
+    "PROVIDER": "mock",
+    "EMAIL_PROVIDER": "console"
+  }
+}
