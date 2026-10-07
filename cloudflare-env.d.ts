@@ -7,6 +7,7 @@ interface CloudflareEnv {
   IMAGES?: unknown;
   APP_URL: string;
   PROVIDER: string;
+  QUEUE_MODE?: string;
   EMAIL_PROVIDER: string;
   SESSION_SECRET: string;
   OPENAI_API_KEY?: string;
