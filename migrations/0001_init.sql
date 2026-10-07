@@ -44,6 +44,7 @@ CREATE TABLE jobs (
   org_id TEXT,
   status TEXT NOT NULL CHECK (status IN ('queued','running','done','failed','cancelled')),
   options TEXT NOT NULL,
+  variants INTEGER NOT NULL DEFAULT 3,
   progress INTEGER NOT NULL DEFAULT 0,
   stage TEXT,
   error TEXT,

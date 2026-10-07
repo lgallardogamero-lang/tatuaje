@@ -4,6 +4,8 @@
  */
 export const FREE_CREDITS = 3;
 export const VARIANTS_PER_GENERATION = 3;
+/** Las pruebas gratuitas (usuario que aún no ha comprado créditos) generan 1 sola variante, con marca de agua. */
+export const FREE_VARIANTS = 1;
 export const DATA_RETENTION_HOURS = 24;
 export const MAX_IMAGE_BYTES = 12 * 1024 * 1024;
 export const MAX_IMAGE_SIDE = 2048;

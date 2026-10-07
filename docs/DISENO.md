@@ -1,5 +1,7 @@
 # Documento de diseño: simulador de tatuajes con IA
 
+> **Nota:** las decisiones posteriores (sobre todo hosting y alcance) están en `/DECISIONES.md` y prevalecen sobre este documento.
+
 Estado: **borrador pendiente de tu aprobación**. No hay código de la aplicación todavía.
 
 ## 1. Decisiones ya tomadas (tus respuestas)

@@ -58,7 +58,7 @@ describe("libro de créditos", () => {
 });
 
 describe("trabajos", () => {
-  it("genera diseño y 3 variantes con marca de agua y cobra 1 crédito", async () => {
+  it("quien ya ha comprado créditos recibe 3 variantes con marca de agua y se cobra 1 crédito", async () => {
     await addPurchaseCredits("u1", 3, "cs_1");
     const id = await createJob({ userId: "u1", options, photo });
     expect(await waitDone(id)).toBe("done");
@@ -68,6 +68,15 @@ describe("trabajos", () => {
     const wm = await one<{ r2_key: string }>("SELECT r2_key FROM assets WHERE job_id = ? AND kind = 'variant_wm'", id);
     const text = new TextDecoder().decode(ctx.BUCKET.store.get(wm!.r2_key)!.bytes);
     expect(text).toContain("Vista previa");
+    expect(await balance("u1")).toBe(2);
+  });
+
+  it("las pruebas gratuitas generan una sola variante", async () => {
+    ctx.DB.raw.prepare("INSERT INTO credit_ledger (id, user_id, delta, reason, ref, created_at) VALUES ('g','u1',3,'free_grant','u1',?)").run(Date.now());
+    const id = await createJob({ userId: "u1", options, photo });
+    expect(await waitDone(id)).toBe("done");
+    const rows = await all<{ kind: string }>("SELECT kind FROM assets WHERE job_id = ? AND kind = 'variant_wm'", id);
+    expect(rows).toHaveLength(1);
     expect(await balance("u1")).toBe(2);
   });
 

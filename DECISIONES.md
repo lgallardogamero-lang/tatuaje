@@ -1,0 +1,45 @@
+# Decisiones tomadas en autónomo (para revisar)
+
+Cada punto indica qué se decidió, por qué y cómo cambiarlo. Ordenadas de más a menos importantes.
+
+## 1. Hosting: Cloudflare, no Vercel + Supabase  ⚠️ REVISAR PRIMERO
+- **Conflicto:** durante la sesión dijiste "cloudfare" y que tenías dominio y cuenta ahí; más tarde indicas Vercel + Supabase.
+- **Decisión:** se mantiene **Cloudflare** (Workers con OpenNext, D1, R2, Queues) porque ya está construido y probado sobre él y tienes la cuenta. Cambiar ahora costaría rehacer la capa de datos, el almacenamiento y la cola.
+- **Si prefieres Vercel + Supabase:** el acoplamiento está concentrado en `src/lib/db.ts` (D1), `src/lib/storage.ts` (R2), `src/lib/env.ts`, `src/lib/jobs.ts` (cola) y `wrangler.jsonc`/`worker.ts`. Es una migración de 1-2 días, no una reescritura. Dímelo y la hago.
+
+## 2. Alcance: parado tras la Fase 1
+- Como pediste, la parte visible llega hasta la Fase 1 (landing, foto, diseño, editor de máscara y colocación, sin IA).
+- **Ojo:** antes de recibir ese límite ya estaba hecho el backend de las fases 2-4 (créditos, trabajos con proveedor simulado, Stripe, borrado a 24 h) con 27 pruebas. No tiene interfaz completa: faltan la pantalla de resultado, la cuenta y el panel de estudios. Nada de B2B ni administración está construido más allá del esquema de base de datos.
+
+## 3. Presupuesto de IA: tope ~0,25 € por generación
+- Coste estimado con el proveedor recomendado (`gpt-image-2`, calidad media): ~0,14 $ por generación de pago (diseño + 3 variantes) y ~0,07 $ por una prueba gratuita (diseño + 1 variante). Cabe en el tope con margen.
+- Calidad "alta" en las variantes llevaría la generación a ~0,5 $, por encima del tope: no se usa. Los precios salen de agregadores y no se han verificado en la web oficial.
+- **No se ha gastado nada ni se ha llamado a ninguna API de pago.** El proveedor real (`src/lib/providers/openai.ts`) está escrito pero **sin probar**.
+
+## 4. Pruebas gratuitas: 1 variante y marca de agua
+- Según tu última indicación, quien aún no ha comprado créditos recibe 1 variante (`FREE_VARIANTS` en `src/lib/config.ts`); quien ha comprado, 3.
+- Los textos de la landing que hablaban de "tres variantes" para todos se han ajustado.
+
+## 5. Marca: "Calco"
+- Nombre provisional elegido por su significado (papel de transferencia). Cámbialo en `Logo.tsx`, `layout.tsx` y los textos si ya tienes otro nombre.
+
+## 6. Propuesta visual elegida: A (Calco)
+- Detalle y alternativas en `docs/PROPUESTAS_VISUALES.md`.
+
+## 7. Editor propio en Canvas 2D (no Konva)
+- Menos dependencias, control total de los gestos táctiles (arrastrar, pellizcar, girar), teclado accesible. Si más adelante necesitas capas o transformadores avanzados, se puede cambiar a Konva.
+
+## 8. Plan Premium de estudios: cupo 400, no 800
+- Con el coste actual 800 generaciones por 99 € pierden dinero (ver `docs/DISENO.md` §6 bis). Está en `src/lib/config.ts`. Los estudios no se construyen todavía.
+
+## 9. Textos legales: borradores sin revisión de abogado
+- Los textos de privacidad, condiciones y cookies son **borradores redactados por Claude**. Hay que revisarlos con un abogado antes de lanzar (en especial la transferencia de fotos a un proveedor de IA fuera de la UE).
+
+## 10. Servicios sin probar (necesitan cuentas o claves tuyas)
+- Envío de email real (Resend), Google OAuth, Stripe (webhook probado en tests con firmas simuladas, no contra Stripe), Turnstile, proveedor de IA real, marca de agua en imágenes rasterizadas (el proveedor real devuelve PNG y falta el binding de Cloudflare Images), conversión de la máscara al formato "transparente = editar" que pide OpenAI.
+- En desarrollo el correo se imprime por consola y el enlace de acceso aparece en pantalla.
+
+## 11. Otros
+- TypeScript fijado en 5.9 y `next.config.mjs`: Next 15 no soporta TypeScript 7.
+- Las muestras de la galería y el proveedor simulado son ilustraciones SVG generadas por código; no representan la calidad de la IA real. Para una landing definitiva conviene sustituirlas por resultados reales.
+- Retención: las fotos subidas se borran a las 24 h siempre; los resultados comprados se conservan 30 días.

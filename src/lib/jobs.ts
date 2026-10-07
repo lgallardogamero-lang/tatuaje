@@ -1,7 +1,7 @@
 import { all, one, run, now } from "./db";
 import { getEnv, waitUntil } from "./env";
 import { newId } from "./ids";
-import { DATA_RETENTION_HOURS, VARIANTS_PER_GENERATION } from "./config";
+import { DATA_RETENTION_HOURS, FREE_VARIANTS, VARIANTS_PER_GENERATION } from "./config";
 import { refund, spend } from "./credits";
 import { deleteObjects, getObject, keyFor, putObject } from "./storage";
 import { getProvider } from "./providers";
@@ -17,6 +17,7 @@ export interface JobRow {
   user_id: string;
   org_id: string | null;
   flash_id: string | null;
+  variants: number;
   status: JobStatus;
   options: string;
   progress: number;
@@ -78,17 +79,21 @@ export async function createJob(input: CreateJobInput): Promise<string> {
   const created = now();
   const orgId = input.orgId ?? null;
   const how = await charge(input.userId, id, orgId);
+  // Quien aún no ha comprado créditos (ni es un estudio) recibe 1 variante; quien ha comprado, las 3.
+  const hasPurchased = Boolean(orgId) || Boolean(await one("SELECT 1 FROM credit_ledger WHERE user_id = ? AND reason = 'purchase' LIMIT 1", input.userId));
+  const variants = hasPurchased ? VARIANTS_PER_GENERATION : FREE_VARIANTS;
   try {
     const expires = created + DATA_RETENTION_HOURS * 3600_000;
     await run(
-      `INSERT INTO jobs (id, user_id, org_id, flash_id, status, options, charge, created_at, updated_at, expires_at)
-       VALUES (?, ?, ?, ?, 'queued', ?, ?, ?, ?, ?)`,
+      `INSERT INTO jobs (id, user_id, org_id, flash_id, status, options, charge, variants, created_at, updated_at, expires_at)
+       VALUES (?, ?, ?, ?, 'queued', ?, ?, ?, ?, ?, ?)`,
       id,
       input.userId,
       orgId,
       input.options.flashId ?? null,
       JSON.stringify(input.options),
       how,
+      variants,
       created,
       created,
       expires,
@@ -221,7 +226,7 @@ export async function processJob(jobId: string): Promise<void> {
         mask,
         design,
         prompt: buildApplyPrompt(options),
-        variants: VARIANTS_PER_GENERATION,
+        variants: job.variants,
         placement: options.placement,
         seed: `${jobId}:${options.description}`,
       }),
