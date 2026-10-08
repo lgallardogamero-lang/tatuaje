@@ -13,7 +13,8 @@
     "db:migrate:remote": "wrangler d1 migrations apply tatuaje --remote",
     "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
     "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
-    "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts"
+    "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts",
+    "probar:openai": "vite-node -c vitest.config.ts scripts/probar-openai.ts --"
   },
   "dependencies": {
     "@fontsource-variable/hanken-grotesk": "^5.3.0",
@@ -37,6 +38,7 @@
     "postcss": "^8.5.29",
     "tailwindcss": "^4.3.3",
     "typescript": "5.9",
+    "vite-node": "^6.0.0",
     "vitest": "^5.0.3",
     "wrangler": "^4.148.0"
   }

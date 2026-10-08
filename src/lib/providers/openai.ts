@@ -13,11 +13,12 @@ export class OpenAIProvider implements ImageGenerationProvider {
     private apiKey: string,
     private model = "gpt-image-2",
     private quality: "low" | "medium" | "high" = "medium",
+    private baseUrl = "https://api.openai.com/v1",
   ) {}
 
   private async call(path: "generations" | "edits", form: FormData | string): Promise<ImageBytes[]> {
     const isJson = typeof form === "string";
-    const res = await fetch(`https://api.openai.com/v1/images/${path}`, {
+    const res = await fetch(`${this.baseUrl}/images/${path}`, {
       method: "POST",
       headers: { Authorization: `Bearer ${this.apiKey}`, ...(isJson ? { "Content-Type": "application/json" } : {}) },
       body: form,

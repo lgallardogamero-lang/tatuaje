@@ -11,6 +11,9 @@ interface CloudflareEnv {
   EMAIL_PROVIDER: string;
   SESSION_SECRET: string;
   OPENAI_API_KEY?: string;
+  OPENAI_IMAGE_MODEL?: string;
+  OPENAI_IMAGE_QUALITY?: string;
+  OPENAI_BASE_URL?: string;
   RESEND_API_KEY?: string;
   EMAIL_FROM?: string;
   STRIPE_SECRET_KEY?: string;

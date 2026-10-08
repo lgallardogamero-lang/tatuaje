@@ -15,7 +15,7 @@ Si cambias una migración antes de desplegar, recrea la base local: `rm -rf .wra
 
 ## Pruebas
 ```bash
-npm test            # lógica: créditos, trabajos, Stripe, moderación (69 pruebas)
+npm test            # lógica: créditos, trabajos, Stripe, moderación (73 pruebas)
 npm run test:e2e    # navegador real, escritorio y móvil (34 pruebas; requiere `npm run dev` en marcha)
 npm run typecheck
 ```
@@ -34,6 +34,9 @@ Los estudios pueden **solicitar el alta** desde `/estudios` (tú recibes un avis
 
 ## Estructura
 - `src/app` páginas y rutas de la API · `src/components` interfaz · `src/lib` lógica (auth, créditos, trabajos, Stripe, moderación) · `src/lib/providers` proveedores de IA tras una interfaz común · `src/prompts` plantillas de prompt versionadas · `migrations` esquema D1 · `docs` diseño técnico.
+
+## Qué necesita de ti
+La guía paso a paso, ordenada por importancia, está en [`docs/MANANA.md`](docs/MANANA.md). Para comprobar el proveedor de IA real con un gasto mínimo: `npm run probar:openai -- foto.jpg "descripción"` (en seco no llama a nada; con `--yes` hace 2 llamadas).
 
 ## Desplegar en Cloudflare
 Probado hasta donde se puede sin tu cuenta: `npx opennextjs-cloudflare build` compila y `npx wrangler deploy --dry-run` valida el Worker (1,6 MiB comprimido, con la cola y la tarea horaria). **No se ha desplegado nunca.**
