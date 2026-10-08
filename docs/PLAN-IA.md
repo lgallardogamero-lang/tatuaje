@@ -9,6 +9,16 @@
 
 Prompts en `src/prompts/v1.ts`, proveedor en `src/lib/providers/openai.ts`.
 
+## Prioridad: calidad y realismo por encima del coste
+Decisión del dueño: lo más importante es que parezca real. Consecuencias:
+- **Calidad `high` por defecto** en todas las pruebas de pago (no solo en HD). El coste por imagen sube, se asume y se ajustan los precios de los créditos.
+- **Recortar y editar en alta resolución**: en vez de mandar la foto entera, recortar la zona alrededor de la máscara, editarla a máxima resolución y pegarla de vuelta con un borde suave. Más detalle en la piel y en la tinta.
+- **Generar varias y elegir**: crear 3-4 candidatos y mostrar los mejores; después se puede añadir un filtro automático que descarte los deformados.
+- **Pruebas ciegas**: comparar versiones del prompt sin saber cuál es cuál, para no autoengañarse.
+- **Foto de entrada guiada**: la app pide luz natural, la zona entera y sin ropa. La mala foto es la causa nº 1 de un mal resultado.
+- **Referencia de calidad**: para retratos o detalle fino, aconsejar subir la referencia grande y nítida (las pequeñas dan resultados borrosos, como vimos con el montaje).
+- **Precio**: si el coste por imagen en `high` es alto, se sube el precio de los packs antes que bajar la calidad.
+
 ## Lo que tienes que hacer tú
 1. Crear la clave en platform.openai.com, con **límite de gasto de 5-10 €**.
 2. Ponerla como variable de entorno del proyecto (`OPENAI_API_KEY`), nunca pegada en el chat ni en el código.
