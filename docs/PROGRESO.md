@@ -59,3 +59,4 @@ Se actualiza en cada hito. Nada de lo hecho hasta ahora ha costado dinero.
 - [x] **Suscripción de estudios con Stripe** (contratar, portal de cliente, pausa por impago, cancelación); webhook probado
 - [x] 78 pruebas de lógica + 38 de navegador
 - [ ] Pendiente estudios: cobro por contacto, estadísticas por cliente
+- [x] **Worker real de Cloudflare ejecutado en local** (`npm run probar:worker`): las 38 pruebas de navegador pasan contra él, con la generación por la cola y la tarea horaria. Encontró un fallo grave que el servidor de desarrollo no mostraba (Next 16.4 + adaptador): Next queda fijado en 16.3.8

@@ -38,6 +38,9 @@ Los estudios pueden **solicitar el alta** desde `/estudios` (tú recibes un avis
 ## Qué necesita de ti
 La guía paso a paso, ordenada por importancia, está en [`docs/MANANA.md`](docs/MANANA.md). Para comprobar el proveedor de IA real con un gasto mínimo: `npm run probar:openai -- foto.jpg "descripción"` (en seco no llama a nada; con `--yes` hace 2 llamadas).
 
+## Probar el Worker real en local
+El servidor de desarrollo (`npm run dev`) no es el mismo código que irá a Cloudflare. Para ejecutar el Worker real con la cola, la base de datos y el almacenamiento simulados: `npm run probar:worker` (compila y lo deja en el puerto 3000) y, en otra terminal, `npm run test:e2e`. Está comprobado que pasan las 38 pruebas de navegador, con la generación pasando por la cola y la tarea horaria respondiendo.
+
 ## Desplegar en Cloudflare
 Probado hasta donde se puede sin tu cuenta: `npx opennextjs-cloudflare build` compila y `npx wrangler deploy --dry-run` valida el Worker (1,6 MiB comprimido, con la cola y la tarea horaria). **No se ha desplegado nunca.**
 

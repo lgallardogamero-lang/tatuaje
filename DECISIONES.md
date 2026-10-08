@@ -80,6 +80,6 @@ Cada punto indica qué se decidió, por qué y cómo cambiarlo. Ordenadas de má
 - **Lo que esto no sustituye:** una auditoría de seguridad profesional y una prueba de intrusión antes de manejar pagos y fotos de personas reales a escala.
 
 ## 16. Otros
-- **Next 16.4:** actualizado desde Next 15 para eliminar los dos avisos de `npm audit` (PostCSS). Todas las pruebas y el empaquetado para Cloudflare pasan sobre esta versión. TypeScript sigue en 5.9 (Next 16.4 ya admite TypeScript 7, pero no hay urgencia); `next.config.mjs` en vez de `.ts` por herencia de aquel problema, sin necesidad de cambiarlo.
+- **Next 16.3.8 (versión exacta, no subir a 16.4 todavía):** actualizado desde Next 15 para eliminar los dos avisos de `npm audit` (PostCSS). Next 16.4.0 genera un archivo nuevo (`preview-props.json`) que el adaptador de Cloudflare actual no conoce: **el Worker no arrancaba (error 500)** aunque las pruebas contra el servidor de desarrollo pasaban. Lo detectó ejecutar el Worker real en local. Antes de subir de versión, repetir `npm run probar:worker` + `npm run test:e2e`. TypeScript sigue en 5.9 (Next 16.4 ya admite TypeScript 7, pero no hay urgencia); `next.config.mjs` en vez de `.ts` por herencia de aquel problema, sin necesidad de cambiarlo.
 - Las muestras de la galería y el proveedor simulado son ilustraciones SVG generadas por código; no representan la calidad de la IA real. Para una landing definitiva conviene sustituirlas por resultados reales.
 - Retención: las fotos subidas se borran a las 24 h siempre; los resultados comprados se conservan 30 días.
