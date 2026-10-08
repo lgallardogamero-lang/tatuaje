@@ -68,7 +68,13 @@ Cada punto indica qué se decidió, por qué y cómo cambiarlo. Ordenadas de má
 - Auditorías automáticas con axe (WCAG 2.1 A/AA): pasan en las páginas públicas, el asistente, la cuenta, el resultado y todo el panel de administración. Corregí tres fallos que encontraron (tira de estilos sin acceso por teclado, ilustración sin texto alternativo y tablas desplazables). Una auditoría automática no sustituye a una revisión manual con lector de pantalla.
 - Hay páginas 404 y de error con la marca, `robots.txt` (bloquea API, administración, cuenta, estudio y resultados), `sitemap.xml` e imagen para redes.
 
-## 15. Otros
-- TypeScript fijado en 5.9 y `next.config.mjs`: Next 15 no soporta TypeScript 7.
+## 15. Revisión de seguridad
+- **Pruebas de aislamiento** (`tests/e2e/seguridad.spec.ts`): un usuario no puede ver, cancelar, regenerar ni desbloquear las pruebas de otro (404 siempre, sin revelar que existen); un estudio no puede ver ni borrar el catálogo de otro ni usar sus diseños; clientes y tatuadores no pueden cambiar datos del estudio; las APIs de administración rechazan a quien no es administrador; el enlace de acceso solo sirve una vez; las peticiones desde otro origen se rechazan (CSRF); un administrador que bloquea a alguien le cierra la sesión al instante; el webhook de Stripe rechaza firmas falsas; se rechazan imágenes falsas, opciones manipuladas, descripciones prohibidas y estudios ajenos.
+- **Hallazgo corregido:** la política de seguridad global de la web sustituía a la estricta (`sandbox`) de los archivos de usuario. Ahora las rutas de la API conservan la suya.
+- Revisión del código: sin `innerHTML` ni `eval`, sin secretos versionados, sin descargas de URLs controladas por el usuario. `npm audit` (producción): 0 vulnerabilidades.
+- **Lo que esto no sustituye:** una auditoría de seguridad profesional y una prueba de intrusión antes de manejar pagos y fotos de personas reales a escala.
+
+## 16. Otros
+- **Next 16.4:** actualizado desde Next 15 para eliminar los dos avisos de `npm audit` (PostCSS). Todas las pruebas y el empaquetado para Cloudflare pasan sobre esta versión. TypeScript sigue en 5.9 (Next 16.4 ya admite TypeScript 7, pero no hay urgencia); `next.config.mjs` en vez de `.ts` por herencia de aquel problema, sin necesidad de cambiarlo.
 - Las muestras de la galería y el proveedor simulado son ilustraciones SVG generadas por código; no representan la calidad de la IA real. Para una landing definitiva conviene sustituirlas por resultados reales.
 - Retención: las fotos subidas se borran a las 24 h siempre; los resultados comprados se conservan 30 días.

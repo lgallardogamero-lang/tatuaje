@@ -71,3 +71,13 @@ describe("marca de agua", () => {
     await expect(applyWatermark({ bytes: tinyJpeg, contentType: "image/png" })).rejects.toThrow();
   });
 });
+
+describe("redirecciones tras entrar", () => {
+  it("solo se admiten rutas internas (evita redirecciones abiertas)", async () => {
+    const { safeNext } = await import("@/lib/client/api");
+    expect(safeNext("/crear/abc")).toBe("/crear/abc");
+    for (const mal of ["//evil.example", "https://evil.example", "/\\evil.example", "javascript:alert(1)", "evil", "", null, undefined]) {
+      expect(safeNext(mal as string | null | undefined), String(mal)).toBe("/crear");
+    }
+  });
+});

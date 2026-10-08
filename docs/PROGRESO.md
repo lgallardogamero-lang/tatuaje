@@ -50,3 +50,6 @@ Se actualiza en cada hito. Nada de lo hecho hasta ahora ha costado dinero.
 - [x] **Marca blanca:** color y logo del estudio en resultados y descargas
 - [x] 59 pruebas de lógica + 30 de navegador
 - [ ] Pendiente estudios: widget embebible, suscripción con Stripe, cobro por contacto, estadísticas por cliente
+- [x] **Revisión de seguridad:** pruebas de aislamiento entre usuarios y estudios, CSRF, enlaces de un solo uso, bloqueo de usuarios, webhook; corregida una política de seguridad que se pisaba
+- [x] **Next 16.4:** `npm audit` sin vulnerabilidades; pruebas y empaquetado para Cloudflare siguen pasando
+- [x] 60 pruebas de lógica + 34 de navegador (escritorio y móvil)

@@ -33,7 +33,12 @@ const nextConfig = {
   poweredByHeader: false,
   images: { unoptimized: true },
   async headers() {
-    return [{ source: "/:path*", headers: securityHeaders }];
+    // Las páginas llevan la política completa. Las rutas de la API conservan la suya propia (los archivos de usuario
+    // se sirven con `default-src 'none'; sandbox`, que no debe quedar sustituida por la de las páginas).
+    return [
+      { source: "/((?!api/).*)", headers: securityHeaders },
+      { source: "/api/:path*", headers: securityHeaders.filter((h) => h.key !== "Content-Security-Policy") },
+    ];
   },
 };
 
