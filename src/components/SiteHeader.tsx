@@ -22,6 +22,7 @@ export async function SiteHeader() {
           <Link href="/estudios" className="btn btn-quiet hidden sm:inline-flex">Para estudios</Link>
           {user ? (
             <>
+              {user.role === "admin" && <Link href="/admin" className="btn btn-quiet">Administración</Link>}
               <Link href="/cuenta" className="btn btn-quiet" aria-label={`Tu cuenta, ${credits} créditos`}>
                 <span className="text-stencil">{credits}</span>
                 <span className="hidden sm:inline">créditos</span>

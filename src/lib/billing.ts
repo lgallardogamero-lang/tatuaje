@@ -1,6 +1,7 @@
 import { one, run, now } from "./db";
 import { newId } from "./ids";
-import { ASSET_PRODUCTS, CREDIT_PACKS, STUDIO_PLANS, type AssetKind, type StudioPlan } from "./config";
+import { STUDIO_PLANS, type AssetKind, type StudioPlan } from "./config";
+import { DEFAULT_PRICING, getPricing } from "./pricing";
 import { addPurchaseCredits, spend } from "./credits";
 
 const RETENTION_PAID_MS = 30 * 86400_000;
@@ -22,7 +23,7 @@ export async function unlockWithCredits(userId: string, jobId: string, kind: Ass
   if (await hasEntitlement(jobId, kind)) return "already";
   const job = await one<{ status: string }>("SELECT status FROM jobs WHERE id = ? AND user_id = ?", jobId, userId);
   if (!job || job.status !== "done") throw new Error("El resultado aún no está listo");
-  const ok = await spend(userId, ASSET_PRODUCTS[kind].credits, "asset_purchase", `${jobId}:${kind}`, jobId);
+  const ok = await spend(userId, (await getPricing()).assets[kind].credits, "asset_purchase", `${jobId}:${kind}`, jobId);
   if (!ok) return "no_credits";
   await grantEntitlement(userId, jobId, kind);
   return "ok";
@@ -52,9 +53,16 @@ export async function handleStripeEvent(ev: StripeEvent): Promise<"processed" | 
     const userId = (obj["client_reference_id"] as string | null) ?? meta["userId"];
     if (paid && userId) {
       if (meta["kind"] === "credits") {
-        const pack = CREDIT_PACKS.find((p) => p.id === meta["packId"]);
-        if (pack) {
-          await addPurchaseCredits(userId, pack.credits, sessionId);
+        // Fuente de verdad: la compra registrada por el servidor al crear el pago (aunque el precio cambie después).
+        // Nunca la cantidad que venga en los metadatos del evento.
+        const stored = await one<{ meta: string | null }>("SELECT meta FROM purchases WHERE stripe_session_id = ? AND user_id = ?", sessionId, userId);
+        let credits = 0;
+        try {
+          credits = Number((JSON.parse(stored?.meta ?? "{}") as { credits?: string | number }).credits ?? 0);
+        } catch {}
+        if (!credits) credits = [...(await getPricing()).packs, ...DEFAULT_PRICING.packs].find((p) => p.id === meta["packId"])?.credits ?? 0;
+        if (credits > 0) {
+          await addPurchaseCredits(userId, credits, sessionId);
           result = "processed";
         }
       } else if (meta["kind"] === "asset" && meta["jobId"] && (meta["assetKind"] === "hd" || meta["assetKind"] === "stencil")) {

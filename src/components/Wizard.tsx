@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { AnimatePresence, MotionConfig, motion } from "motion/react";
 import { BODY_ZONES, SIZES, STYLES } from "@/lib/config";
 import { api, ApiError } from "@/lib/client/api";
+import { usePricing } from "@/lib/client/usePricing";
 import { downloadBlob, prepareImage, type Prepared } from "@/lib/client/image";
 import type { Placement } from "@/lib/schema";
 import { AuthForm } from "./AuthForm";
@@ -20,6 +21,7 @@ export function Wizard() {
   const router = useRouter();
   const [step, setStep] = useState(0);
   const [credits, setCredits] = useState<number | null>(null);
+  const { freeCredits } = usePricing();
   const [authOpen, setAuthOpen] = useState(false);
   const [paywall, setPaywall] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -293,7 +295,7 @@ export function Wizard() {
                     <button className="btn btn-quiet" onClick={reset}>Empezar otra prueba</button>
                   </div>
                   <p className="hint">
-                    {credits === null ? "Te pediremos entrar con tu email. Tienes 3 pruebas gratis." : `Usa 1 crédito. Te quedan ${credits}.`} Tus fotos se borran a las 24 horas.
+                    {credits === null ? `Te pediremos entrar con tu email. Tienes ${freeCredits} pruebas gratis.` : `Usa 1 crédito. Te quedan ${credits}.`} Tus fotos se borran a las 24 horas.
                   </p>
                 </div>
               </div>

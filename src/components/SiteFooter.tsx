@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Logo } from "./Logo";
+import { CookieSettingsButton } from "./CookieSettingsButton";
 
 export function SiteFooter() {
   return (
@@ -20,7 +21,9 @@ export function SiteFooter() {
         <nav aria-label="Legal" className="grid content-start gap-2 text-[0.95rem]">
           <Link href="/privacidad" className="hover:text-stencil">Privacidad</Link>
           <Link href="/terminos" className="hover:text-stencil">Condiciones de uso</Link>
+          <Link href="/aviso-legal" className="hover:text-stencil">Aviso legal</Link>
           <Link href="/cookies" className="hover:text-stencil">Cookies</Link>
+          <CookieSettingsButton />
         </nav>
       </div>
       <div className="wrap border-t border-line py-6 hint">Tus fotos se borran automáticamente a las 24 horas.</div>

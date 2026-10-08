@@ -36,3 +36,7 @@ Se actualiza en cada hito. Nada de lo hecho hasta ahora ha costado dinero.
 - [ ] Pendiente Fase 4: probar pagos contra Stripe real (necesita claves), facturas con Stripe Tax
 - [ ] Pendiente Fase 5: estudios (cuentas, suscripción, modo estudio, marca blanca, widget, directorio) y panel de administración
 - [ ] Pendiente Fase 6: `worker.ts` para la cola y el borrado horario en Cloudflare, límites de peticiones en Cloudflare, despliegue
+- [x] **Administración:** panel (resumen con ingresos, coste de IA y margen; usuarios; estudios; precios editables; registro de auditoría), roles, bloqueo de usuarios, 36 pruebas de lógica
+- [x] **Legal y privacidad:** banner de cookies con gestión, aviso legal, consentimiento de desistimiento en pagos, descarga de datos, cabeceras de seguridad
+- [x] 16 pruebas de navegador (escritorio y móvil) incluyendo administración y cookies
+- [ ] Pendiente: lado del estudio (panel propio, modo estudio, catálogo de flash, directorio, marca blanca, widget)

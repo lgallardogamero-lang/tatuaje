@@ -5,6 +5,7 @@ CREATE TABLE users (
   role TEXT NOT NULL DEFAULT 'user' CHECK (role IN ('user','admin')),
   adult_confirmed_at INTEGER,
   privacy_accepted_at INTEGER,
+  banned_at INTEGER,
   created_at INTEGER NOT NULL,
   deleted_at INTEGER
 );
@@ -45,6 +46,7 @@ CREATE TABLE jobs (
   status TEXT NOT NULL CHECK (status IN ('queued','running','done','failed','cancelled')),
   options TEXT NOT NULL,
   variants INTEGER NOT NULL DEFAULT 3,
+  images INTEGER NOT NULL DEFAULT 0,
   progress INTEGER NOT NULL DEFAULT 0,
   stage TEXT,
   error TEXT,
@@ -104,4 +106,31 @@ CREATE TABLE rate_limits (
   window_start INTEGER NOT NULL,
   count INTEGER NOT NULL,
   PRIMARY KEY (key, window_start)
+);
+
+-- Configuración editable desde el panel de administración (precios, créditos gratis, coste de IA)
+CREATE TABLE settings (
+  key TEXT PRIMARY KEY,
+  value TEXT NOT NULL,
+  updated_at INTEGER NOT NULL
+);
+
+-- Registro de auditoría de acciones de administración
+CREATE TABLE admin_log (
+  id TEXT PRIMARY KEY,
+  admin_id TEXT NOT NULL,
+  admin_email TEXT NOT NULL,
+  action TEXT NOT NULL,
+  target TEXT,
+  detail TEXT,
+  created_at INTEGER NOT NULL
+);
+CREATE INDEX admin_log_time ON admin_log(created_at);
+
+-- Uso agregado por día (sobrevive al borrado de los trabajos a las 24 h; no contiene datos personales)
+CREATE TABLE usage_daily (
+  day TEXT PRIMARY KEY,
+  jobs_done INTEGER NOT NULL DEFAULT 0,
+  jobs_failed INTEGER NOT NULL DEFAULT 0,
+  images INTEGER NOT NULL DEFAULT 0
 );

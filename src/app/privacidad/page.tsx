@@ -30,6 +30,8 @@ export default function Page() {
         <li><strong>Proveedor de correo</strong> [pendiente]: envío del enlace de acceso.</li>
         <li><strong>Estudios de tatuaje:</strong> solo si pulsas «Contactar» o «Reservar» en un estudio, y únicamente los datos que decidas enviarle.</li>
       </ul>
+      <h2>Quién puede ver tus datos en Calco</h2>
+      <p>Las personas con rol de administrador pueden ver tu email, tu saldo de créditos, tus compras y los metadatos de tus pruebas para dar soporte y gestionar el servicio. No ven tus fotos. Todas sus acciones sobre cuentas, créditos y precios quedan en un registro de auditoría.</p>
       <h2>Qué no hacemos</h2>
       <ul>
         <li>No publicamos tus fotos ni las usamos en publicidad.</li>
@@ -39,7 +41,7 @@ export default function Page() {
       <h2>Edad</h2>
       <p>Calco es solo para mayores de 18 años. Al registrarte confirmas que lo eres.</p>
       <h2>Tus derechos</h2>
-      <p>Puedes acceder a tus datos, rectificarlos, borrarlos, limitar su uso, oponerte, pedir su portabilidad y retirar tu consentimiento escribiendo a [correo pendiente]. Desde tu cuenta puedes borrar tus fotos y eliminar tu cuenta. Si crees que no tratamos tus datos bien, puedes reclamar ante la Agencia Española de Protección de Datos (aepd.es).</p>
+      <p>Puedes acceder a tus datos, rectificarlos, borrarlos, limitar su uso, oponerte, pedir su portabilidad y retirar tu consentimiento escribiendo a [correo pendiente]. Desde tu cuenta puedes descargar todos tus datos en JSON, borrar tus fotos y eliminar tu cuenta. Al eliminar la cuenta anonimizamos tu email y conservamos únicamente los registros de pagos que la ley exige guardar. Si crees que no tratamos tus datos bien, puedes reclamar ante la Agencia Española de Protección de Datos (aepd.es).</p>
       <h2>Seguridad</h2>
       <p>Las fotos solo se pueden descargar desde tu sesión, viajan cifradas y se guardan con acceso restringido.</p>
     </Legal>

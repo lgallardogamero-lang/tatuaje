@@ -31,6 +31,18 @@ export interface JobRow {
 
 export interface UploadedImage extends ImageBytes {}
 
+async function recordUsage(done: boolean, images: number) {
+  const day = new Date().toISOString().slice(0, 10);
+  await run(
+    `INSERT INTO usage_daily (day, jobs_done, jobs_failed, images) VALUES (?, ?, ?, ?)
+     ON CONFLICT(day) DO UPDATE SET jobs_done = jobs_done + excluded.jobs_done, jobs_failed = jobs_failed + excluded.jobs_failed, images = images + excluded.images`,
+    day,
+    done ? 1 : 0,
+    done ? 0 : 1,
+    images,
+  );
+}
+
 export class NoCreditsError extends Error {}
 export class QuotaError extends Error {}
 
@@ -215,6 +227,7 @@ export async function processJob(jobId: string): Promise<void> {
       );
     }
     if (await isCancelled(jobId)) return;
+    await run("UPDATE jobs SET images = ? WHERE id = ?", job.flash_id ? 0 : 1, jobId);
     await storeAsset(jobId, job.user_id, "design", design, 0, expires);
     await storeAsset(jobId, job.user_id, "design_wm", await applyWatermark(design), 0, expires);
 
@@ -231,6 +244,7 @@ export async function processJob(jobId: string): Promise<void> {
         seed: `${jobId}:${options.description}`,
       }),
     );
+    await run("UPDATE jobs SET images = ? WHERE id = ?", (job.flash_id ? 0 : 1) + variants.length, jobId);
     if (await isCancelled(jobId)) return;
     await setProgress(jobId, 85, "Revelando el resultado");
     for (let i = 0; i < variants.length; i++) {
@@ -244,6 +258,7 @@ export async function processJob(jobId: string): Promise<void> {
       jobId,
     );
     if (done !== 1) await purgeJobFiles(jobId); // se canceló mientras terminaba
+    else await recordUsage(true, (job.flash_id ? 0 : 1) + variants.length);
     if (job.flash_id) await run("UPDATE flash_designs SET tried_count = tried_count + 1 WHERE id = ?", job.flash_id);
   } catch (e) {
     console.error("processJob falló", jobId, e);
@@ -254,6 +269,9 @@ export async function processJob(jobId: string): Promise<void> {
       jobId,
     );
     await refundJob(jobId);
+    // Las imágenes ya generadas antes del fallo también cuestan dinero.
+    const partial = await one<{ images: number }>("SELECT images FROM jobs WHERE id = ?", jobId);
+    await recordUsage(false, partial?.images ?? 0);
   }
 }
 

@@ -31,6 +31,7 @@ export function AccountActions() {
         <button disabled={busy} className="btn btn-ghost" onClick={() => run(() => api("/api/me/photos", { method: "DELETE" }), "Hemos borrado todas tus fotos y resultados.")}>
           Borrar mis fotos
         </button>
+        <a className="btn btn-ghost" href="/api/me/export" download>Descargar mis datos</a>
         <button disabled={busy} className="btn btn-ghost" onClick={() => run(() => api("/api/auth/logout", { method: "POST" }), "Sesión cerrada.", () => { router.push("/"); router.refresh(); })}>
           Cerrar sesión
         </button>

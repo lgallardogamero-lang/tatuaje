@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { HeroSkin } from "@/components/HeroSkin";
 import { StyleStrip } from "@/components/StyleStrip";
-import { CREDIT_PACKS, FREE_CREDITS, eur } from "@/lib/config";
+import { eur } from "@/lib/config";
+import { getPricing } from "@/lib/pricing";
 
 const STEPS = [
   { t: "Sube la foto", d: "De tu brazo, pierna, espalda o la zona que quieras. Desde la galería o con la cámara." },
@@ -10,16 +11,20 @@ const STEPS = [
   { t: "Compáralo", d: "Recibes el resultado aplicado a tu piel y lo comparas con tu foto original deslizando." },
 ];
 
-const FAQ = [
+const faq = (free: number) => [
   { q: "¿Qué hacéis con mis fotos?", a: "Las usamos solo para generar tu simulación. Se borran automáticamente a las 24 horas, y puedes borrarlas antes desde tu cuenta con un botón." },
   { q: "¿Se parecerá al tatuaje real?", a: "Es una simulación orientativa. Sirve para decidir tamaño, zona y estilo; el resultado final depende de tu tatuador, de tu piel y de la cicatrización." },
-  { q: "¿Cuánto cuesta?", a: `Tienes ${FREE_CREDITS} pruebas gratis al registrarte, con una variante y marca de agua. Después compras créditos sueltos, sin suscripción: cada prueba de pago te da tres variantes.` },
+  { q: "¿Cuánto cuesta?", a: `Tienes ${free} pruebas gratis al registrarte, con una variante y marca de agua. Después compras créditos sueltos, sin suscripción: cada prueba de pago te da tres variantes.` },
   { q: "¿Puedo llevarle el diseño a mi tatuador?", a: "Sí. Puedes descargar el diseño en limpio y en versión stencil, lista para imprimir y transferir." },
   { q: "¿Qué fotos no admitís?", a: "Desnudos, imágenes de menores y contenido violento o de odio. Hay que ser mayor de edad para usar Calco." },
   { q: "¿Soy un estudio de tatuaje, puedo usarlo con mis clientes?", a: "Sí, hay un modo estudio pensado para usarlo con el cliente en una tablet. Mira la página de estudios." },
 ];
 
-export default function Home() {
+export const dynamic = "force-dynamic";
+
+export default async function Home() {
+  const { packs, freeCredits: FREE_CREDITS } = await getPricing();
+  const FAQ = faq(FREE_CREDITS);
   return (
     <>
       <section className="wrap grid items-center gap-10 pb-16 pt-10 lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)] lg:gap-14 lg:pb-24 lg:pt-16">
@@ -96,15 +101,15 @@ export default function Home() {
             </div>
             <Link href="/crear" className="btn btn-ghost">Empezar</Link>
           </div>
-          {CREDIT_PACKS.map((p) => (
-            <div key={p.id} className={`grid content-between gap-8 p-7 ${"highlight" in p ? "bg-panel-2" : "bg-ink"}`}>
+          {packs.map((p) => (
+            <div key={p.id} className={`grid content-between gap-8 p-7 ${p.highlight ? "bg-panel-2" : "bg-ink"}`}>
               <div>
                 <p className="text-sm font-semibold text-stencil">{p.label}</p>
                 <p className="display mt-2 text-5xl">{p.credits}</p>
                 <p className="mt-1 text-bone/75">créditos por {eur(p.priceCents)}</p>
                 <p className="hint mt-1">{eur(Math.round(p.priceCents / p.credits))} cada uno</p>
               </div>
-              <Link href="/crear" className={`btn ${"highlight" in p ? "btn-primary" : "btn-ghost"}`}>Elegir</Link>
+              <Link href="/crear" className={`btn ${p.highlight ? "btn-primary" : "btn-ghost"}`}>Elegir</Link>
             </div>
           ))}
         </div>

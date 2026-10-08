@@ -15,10 +15,14 @@ Si cambias una migración antes de desplegar, recrea la base local: `rm -rf .wra
 
 ## Pruebas
 ```bash
-npm test            # lógica: créditos, trabajos, Stripe, moderación (27 pruebas)
-npm run test:e2e    # navegador real, escritorio y móvil (10 pruebas; requiere `npm run dev` en marcha)
+npm test            # lógica: créditos, trabajos, Stripe, moderación (36 pruebas)
+npm run test:e2e    # navegador real, escritorio y móvil (16 pruebas; requiere `npm run dev` en marcha)
 npm run typecheck
 ```
+
+## Administración
+Tu email debe estar en `ADMIN_EMAILS` (en local ya está en `.dev.vars`; en producción: `wrangler secret put ADMIN_EMAILS`). Al entrar verás «Administración» en la cabecera:
+resumen de ingresos, coste de IA y margen · usuarios (regalar o quitar créditos, bloquear, dar o quitar rol de administrador, borrar fotos o cuenta) · estudios · precios editables · registro de auditoría. Las personas sin rol reciben un 404.
 
 ## Estructura
 - `src/app` páginas y rutas de la API · `src/components` interfaz · `src/lib` lógica (auth, créditos, trabajos, Stripe, moderación) · `src/lib/providers` proveedores de IA tras una interfaz común · `src/prompts` plantillas de prompt versionadas · `migrations` esquema D1 · `docs` diseño técnico.

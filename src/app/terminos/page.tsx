@@ -24,7 +24,7 @@ export default function Page() {
         <li>Si una generación falla por un error nuestro, se te devuelve el crédito automáticamente.</li>
         <li>La descarga en alta resolución sin marca de agua y el stencil se pagan aparte o con créditos.</li>
         <li>Los precios incluyen IVA. Recibirás factura descargable.</li>
-        <li>Derecho de desistimiento: el contenido digital que empieza a prestarse tras tu petición expresa no admite desistimiento una vez generado. [Pendiente: añadir casilla de consentimiento expreso en el pago y revisión legal.]</li>
+        <li>Derecho de desistimiento: el contenido digital que empieza a prestarse tras tu petición expresa no admite desistimiento una vez generado. Antes de pagar con tarjeta te pedimos una casilla de consentimiento expreso y guardamos la fecha. [Pendiente de revisión legal.]</li>
       </ul>
       <h2>Propiedad de los diseños</h2>
       <p>Los diseños generados son para tu uso personal y para llevarlos a tu tatuador. Si subes una referencia, confirmas que puedes usarla. No garantizamos que un diseño generado sea original o esté libre de derechos de terceros.</p>

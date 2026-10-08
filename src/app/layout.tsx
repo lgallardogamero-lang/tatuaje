@@ -4,6 +4,7 @@ import "@fontsource-variable/hanken-grotesk";
 import "./globals.css";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
+import { CookieConsent } from "@/components/CookieConsent";
 
 export const metadata: Metadata = {
   title: { default: "Calco: pruébate el tatuaje antes de hacértelo", template: "%s · Calco" },
@@ -23,6 +24,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <SiteHeader />
         <main id="contenido">{children}</main>
         <SiteFooter />
+        <CookieConsent />
       </body>
     </html>
   );

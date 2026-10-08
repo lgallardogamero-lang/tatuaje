@@ -2,7 +2,8 @@ import { cookies, headers } from "next/headers";
 import { all, one, run, now } from "./db";
 import { getEnv, isSecureUrl } from "./env";
 import { newId, randomToken, sha256 } from "./ids";
-import { FREE_CREDITS, LIMITS } from "./config";
+import { LIMITS } from "./config";
+import { getPricing } from "./pricing";
 import { hit } from "./ratelimit";
 import { sendMail } from "./email";
 
@@ -54,8 +55,9 @@ export async function requestMagicLink(rawEmail: string): Promise<{ devLink?: st
   const email = normalizeEmail(rawEmail);
   if (!isEmail(email)) throw new HttpError(400, "Escribe un email válido");
   const ip = await ipHash();
-  const okEmail = await hit(`ml:email:${email}`, LIMITS.magicLinkPerEmailPerHour, 3600_000);
-  const okIp = await hit(`ml:ip:${ip}`, LIMITS.magicLinkPerIpPerHour, 3600_000);
+  const relaxed = getEnv().DISABLE_ABUSE_LIMITS === "1"; // solo local y pruebas
+  const okEmail = relaxed || (await hit(`ml:email:${email}`, LIMITS.magicLinkPerEmailPerHour, 3600_000));
+  const okIp = relaxed || (await hit(`ml:ip:${ip}`, LIMITS.magicLinkPerIpPerHour, 3600_000));
   if (!okEmail || !okIp) throw new HttpError(429, "Demasiados intentos. Espera un rato y vuelve a probar");
 
   const token = randomToken();
@@ -95,7 +97,8 @@ export async function upsertUser(rawEmail: string): Promise<User> {
   const email = normalizeEmail(rawEmail);
   const env = getEnv();
   const admins = (env.ADMIN_EMAILS ?? "").split(",").map(normalizeEmail).filter(Boolean);
-  let user = await one<User>("SELECT id, email, role FROM users WHERE email = ? AND deleted_at IS NULL", email);
+  let user = await one<User & { banned_at: number | null }>("SELECT id, email, role, banned_at FROM users WHERE email = ? AND deleted_at IS NULL", email);
+  if (user?.banned_at) throw new HttpError(403, "Esta cuenta está suspendida. Escríbenos si crees que es un error");
   if (!user) {
     const id = newId();
     const role = admins.includes(email) ? "admin" : "user";
@@ -108,13 +111,13 @@ export async function upsertUser(rawEmail: string): Promise<User> {
       now(),
       now(),
     );
-    user = { id, email, role };
+    user = { id, email, role, banned_at: null };
     await grantFreeCredits(id);
   } else if (admins.includes(email) && user.role !== "admin") {
     await run("UPDATE users SET role = 'admin' WHERE id = ?", user.id);
     user.role = "admin";
   }
-  return user;
+  return { id: user.id, email: user.email, role: user.role };
 }
 
 /** Concede las pruebas gratuitas salvo que la IP o el dispositivo ya hayan agotado las suyas. */
@@ -138,7 +141,7 @@ async function grantFreeCredits(userId: string) {
     "INSERT OR IGNORE INTO credit_ledger (id, user_id, delta, reason, ref, created_at) VALUES (?, ?, ?, 'free_grant', ?, ?)",
     newId(),
     userId,
-    FREE_CREDITS,
+    (await getPricing()).freeCredits,
     userId,
     now(),
   );
@@ -174,7 +177,7 @@ export async function getUser(): Promise<User | null> {
   if (!token) return null;
   return one<User>(
     `SELECT u.id, u.email, u.role FROM sessions s JOIN users u ON u.id = s.user_id
-     WHERE s.token_hash = ? AND s.expires_at > ? AND u.deleted_at IS NULL`,
+     WHERE s.token_hash = ? AND s.expires_at > ? AND u.deleted_at IS NULL AND u.banned_at IS NULL`,
     await sha256(token),
     now(),
   );

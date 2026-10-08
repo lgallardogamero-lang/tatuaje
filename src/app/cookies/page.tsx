@@ -11,7 +11,10 @@ export default function Page() {
         <li><strong>did</strong> (dispositivo): ayuda a evitar que se abuse de las pruebas gratuitas. Dura hasta 5 años.</li>
         <li><strong>g_state</strong>: solo si entras con Google, protege el inicio de sesión. Dura 10 minutos.</li>
       </ul>
-      <p>Si más adelante añadimos analítica o publicidad, pediremos tu consentimiento antes. [Revisar con un abogado si basta con este aviso para cookies técnicas.]</p>
+      <ul>
+        <li><strong>calco_consent</strong>: recuerda tu elección sobre cookies. Dura 12 meses, después te volvemos a preguntar.</li>
+      </ul>
+      <p>Puedes cambiar tu elección en cualquier momento desde «Gestionar cookies», en el pie de página. Si más adelante añadimos analítica o publicidad, solo se activarán si las aceptas. [Revisar con un abogado si basta con este aviso para cookies técnicas.]</p>
     </Legal>
   );
 }

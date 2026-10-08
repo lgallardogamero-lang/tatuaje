@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ASSET_PRODUCTS, STYLES, eur } from "@/lib/config";
+import { STYLES, eur } from "@/lib/config";
+import { usePricing } from "@/lib/client/usePricing";
 import { api, ApiError } from "@/lib/client/api";
 import { downloadBlob, makeStencil, toPngBlob } from "@/lib/client/image";
 import { CompareSlider } from "./CompareSlider";
@@ -33,8 +34,10 @@ export function JobView({ id }: { id: string }) {
   const [busy, setBusy] = useState<string | null>(null);
   const [paywall, setPaywall] = useState(false);
   const [notice, setNotice] = useState("");
+  const [consent, setConsent] = useState(false);
   const [msgIdx, setMsgIdx] = useState(0);
   const failures = useRef(0);
+  const { assets: ASSET_PRODUCTS } = usePricing();
 
   const load = useCallback(async () => {
     try {
@@ -101,7 +104,7 @@ export function JobView({ id }: { id: string }) {
   });
 
   const unlock = (kind: "hd" | "stencil", method: "credits" | "card") => action(`unlock-${kind}`, async () => {
-    const r = await api<{ url?: string }>(`/api/jobs/${id}/unlock`, { method: "POST", json: { kind, method } });
+    const r = await api<{ url?: string }>(`/api/jobs/${id}/unlock`, { method: "POST", json: { kind, method, withdrawalConsent: method === "card" ? consent : undefined } });
     if (r.url) window.location.href = r.url;
     else {
       await load();
@@ -205,7 +208,7 @@ export function JobView({ id }: { id: string }) {
                   <p className="font-semibold">Quita la marca de agua</p>
                   <div className="flex flex-wrap gap-2">
                     <button className="btn btn-ghost btn-sm" disabled={busy === "unlock-hd"} onClick={() => unlock("hd", "credits")}>{ASSET_PRODUCTS.hd.credits} créditos</button>
-                    <button className="btn btn-ghost btn-sm" disabled={busy === "unlock-hd"} onClick={() => unlock("hd", "card")}>{eur(ASSET_PRODUCTS.hd.priceCents)} con tarjeta</button>
+                    <button className="btn btn-ghost btn-sm" disabled={busy === "unlock-hd" || !consent} onClick={() => unlock("hd", "card")}>{eur(ASSET_PRODUCTS.hd.priceCents)} con tarjeta</button>
                   </div>
                 </div>
               )}
@@ -219,9 +222,15 @@ export function JobView({ id }: { id: string }) {
                   <p className="text-sm text-bone/80">El diseño en limpio y el stencil listo para imprimir.</p>
                   <div className="flex flex-wrap gap-2">
                     <button className="btn btn-ghost btn-sm" disabled={busy === "unlock-stencil"} onClick={() => unlock("stencil", "credits")}>{ASSET_PRODUCTS.stencil.credits} créditos</button>
-                    <button className="btn btn-ghost btn-sm" disabled={busy === "unlock-stencil"} onClick={() => unlock("stencil", "card")}>{eur(ASSET_PRODUCTS.stencil.priceCents)} con tarjeta</button>
+                    <button className="btn btn-ghost btn-sm" disabled={busy === "unlock-stencil" || !consent} onClick={() => unlock("stencil", "card")}>{eur(ASSET_PRODUCTS.stencil.priceCents)} con tarjeta</button>
                   </div>
                 </div>
+              )}
+              {!(hd && stencil) && (
+                <label className="flex items-start gap-3 text-[0.85rem] text-bone/75">
+                  <input type="checkbox" className="mt-0.5 h-5 w-5 shrink-0 accent-[#a58bff]" checked={consent} onChange={(e) => setConsent(e.target.checked)} />
+                  <span>Para pagar con tarjeta: acepto que el contenido digital se entregue al instante y pierdo el derecho de desistimiento de 14 días.</span>
+                </label>
               )}
               <hr className="rule" />
               <button className="btn btn-ghost" disabled={busy === "regen"} onClick={regenerate}>Regenerar (1 crédito)</button>

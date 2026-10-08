@@ -3,6 +3,11 @@ import path from "node:path";
 
 const foto = path.resolve(import.meta.dirname, "../fixtures/antebrazo.jpg");
 
+// Partimos de un usuario que ya eligió sobre las cookies (el aviso se prueba en admin.spec.ts)
+test.beforeEach(async ({ context }) => {
+  await context.addCookies([{ name: "calco_consent", value: encodeURIComponent(JSON.stringify({ v: 1, analytics: false, marketing: false, ts: Date.now() })), url: "http://localhost:3000" }]);
+});
+
 test("landing: se ve el hero y los enlaces principales", async ({ page }) => {
   await page.goto("/");
   await expect(page.getByRole("heading", { level: 1 })).toContainText("Pruébate el tatuaje");
@@ -172,6 +177,9 @@ test("generación completa: entrar, generar, comparar, quitar marca y paywall", 
   // Sin créditos: regenerar abre el paywall; el pago no está configurado en local
   await page.getByRole("button", { name: /Regenerar/ }).click();
   await expect(page.getByRole("dialog")).toContainText("Te has quedado sin créditos");
+  // sin consentimiento expreso no se puede pagar
+  await expect(page.getByRole("button", { name: /30\s*créditos/ })).toBeDisabled();
+  await page.getByRole("dialog").getByLabel(/pierdo el derecho de desistimiento/).check();
   await page.getByRole("button", { name: /30\s*créditos/ }).click();
   await expect(page.getByRole("dialog").getByRole("alert")).toContainText("pagos aún no están activados");
 });

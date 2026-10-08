@@ -44,7 +44,19 @@ Cada punto indica qué se decidió, por qué y cómo cambiarlo. Ordenadas de má
 ## 11. Variable `DISABLE_ABUSE_LIMITS`
 - Solo para local y pruebas: desactiva el límite de pruebas gratis por IP y dispositivo (si no, las pruebas e2e agotarían el límite de 3 cuentas por IP). Está en `.dev.vars`. **Nunca debe definirse en producción.**
 
-## 12. Otros
+## 12. Administración, permisos y legal (añadido a petición tuya)
+- **Quién es administrador:** quien tenga su email en `ADMIN_EMAILS`. En local puse el tuyo en `.dev.vars` (no se sube a git). En producción hay que definirlo como secreto. Un administrador puede dar el rol a otros desde el panel, pero no puede bloquearse, quitarse el rol ni borrar a otro administrador sin quitarle antes el rol.
+- **Lo que NO puede ver el administrador:** las fotos. El panel no tiene forma de verlas; solo borrarlas.
+- **Registro de auditoría:** toda acción de administración (créditos, bloqueos, roles, precios, estudios) queda en `admin_log`, sin pantalla para editarlo.
+- **Precios editables** en el panel (`settings`); un pago iniciado se abona con el precio con el que se creó, aunque cambies los precios después.
+- **Coste de IA:** es una estimación (imágenes × coste unitario configurable). Se guarda por día en `usage_daily`, que sobrevive al borrado de los trabajos y no contiene datos personales. No descuenta comisiones de Stripe y el IVA se calcula al 21 %.
+- **Cookies:** hoy solo hay cookies técnicas, así que el banner no es legalmente obligatorio; lo añadí igualmente con «Rechazar» y «Aceptar» al mismo nivel, panel por categorías y «Gestionar cookies» en el pie. La elección caduca a los 12 meses. Si añades analítica, cárgala solo con `hasConsent("analytics")` (`src/lib/consent.ts`).
+- **Consentimiento de desistimiento:** el pago con tarjeta exige marcar una casilla (el servidor lo rechaza si falta) y guarda la fecha. El texto exacto debe validarlo un abogado.
+- **Derechos RGPD:** descarga de todos los datos en JSON y borrado desde la cuenta; la privacidad menciona qué ve el administrador.
+- **Cabeceras de seguridad** (CSP, anti-iframe, HSTS, etc.). La CSP lleva `'unsafe-inline'` en scripts porque Next lo necesita sin nonces; mejorable en el futuro. **No probada en producción real.**
+- **Pendiente de la parte de estudios:** el estudio todavía no tiene su propio panel, ni modo estudio en el asistente, ni catálogo de flash, directorio público, marca blanca ni widget. El administrador sí puede crear estudios, activar planes y fijar cupos a mano.
+
+## 13. Otros
 - TypeScript fijado en 5.9 y `next.config.mjs`: Next 15 no soporta TypeScript 7.
 - Las muestras de la galería y el proveedor simulado son ilustraciones SVG generadas por código; no representan la calidad de la IA real. Para una landing definitiva conviene sustituirlas por resultados reales.
 - Retención: las fotos subidas se borran a las 24 h siempre; los resultados comprados se conservan 30 días.
