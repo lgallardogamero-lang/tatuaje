@@ -1,4 +1,5 @@
-import { getEnv } from "./env";
+import { decodePng, encodePng } from "./png";
+import { stampWatermark } from "./stamp";
 import type { ImageBytes } from "./providers/types";
 
 /**
@@ -16,11 +17,11 @@ export async function applyWatermark(img: ImageBytes, label = "Vista previa · t
     const marks = `<defs><pattern id="wm" width="${tile}" height="${tile}" patternUnits="userSpaceOnUse" patternTransform="rotate(-28)"><text x="0" y="${fs}" font-family="sans-serif" font-size="${fs}" fill="#fff" fill-opacity="0.34" stroke="#000" stroke-opacity="0.18" stroke-width="0.6">${label}</text></pattern></defs><rect width="${W}" height="${H}" fill="url(#wm)"/>`;
     return { bytes: new TextEncoder().encode(svg.replace(/<\/svg>\s*$/, `${marks}</svg>`)), contentType: img.contentType };
   }
-  const images = getEnv().IMAGES as { input: (s: ReadableStream) => unknown } | undefined;
-  if (!images) {
-    // Falla cerrado: sin marca de agua no se entrega un resultado gratuito.
-    throw new Error("Marca de agua no disponible para imágenes rasterizadas: falta el binding IMAGES");
+  if (img.contentType === "image/png") {
+    // Falla cerrado: si la imagen no se puede leer, no se entrega un resultado gratuito sin marca.
+    const r = await decodePng(img.bytes);
+    stampWatermark(r);
+    return { bytes: await encodePng(r), contentType: "image/png" };
   }
-  // SIN PROBAR: dibujar el PNG de marca de agua con Cloudflare Images (env.IMAGES.input(...).draw(...)).
-  throw new Error("Marca de agua rasterizada pendiente de implementar con Cloudflare Images");
+  throw new Error(`Marca de agua no disponible para ${img.contentType}`);
 }

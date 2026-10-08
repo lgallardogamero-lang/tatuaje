@@ -15,7 +15,7 @@ Si cambias una migración antes de desplegar, recrea la base local: `rm -rf .wra
 
 ## Pruebas
 ```bash
-npm test            # lógica: créditos, trabajos, Stripe, moderación (60 pruebas)
+npm test            # lógica: créditos, trabajos, Stripe, moderación (69 pruebas)
 npm run test:e2e    # navegador real, escritorio y móvil (34 pruebas; requiere `npm run dev` en marcha)
 npm run typecheck
 ```

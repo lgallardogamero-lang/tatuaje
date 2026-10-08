@@ -1,4 +1,5 @@
 import { imageSize } from "../image-validation";
+import { toProviderMask } from "../mask";
 import { TransientProviderError, type ApplyInput, type DesignInput, type ImageBytes, type ImageGenerationProvider } from "./types";
 
 /**
@@ -62,7 +63,11 @@ export class OpenAIProvider implements ImageGenerationProvider {
     f.set("n", String(input.variants));
     f.append("image[]", new Blob([input.photo.bytes as BlobPart], { type: input.photo.contentType }), "photo");
     f.append("image[]", new Blob([input.design.bytes as BlobPart], { type: input.design.contentType }), "design");
-    if (input.mask) f.set("mask", new Blob([input.mask.bytes as BlobPart], { type: input.mask.contentType }), "mask.png");
+    if (input.mask) {
+      // OpenAI pide la máscara del mismo tamaño que la foto y con la zona a editar TRANSPARENTE.
+      const mask = await toProviderMask(input.mask.bytes, dims.width, dims.height);
+      f.set("mask", new Blob([mask as BlobPart], { type: "image/png" }), "mask.png");
+    }
     return this.call("edits", f);
   }
 }

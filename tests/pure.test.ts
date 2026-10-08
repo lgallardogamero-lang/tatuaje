@@ -65,7 +65,7 @@ describe("marca de agua", () => {
     const out = await applyWatermark({ bytes: new TextEncoder().encode(designSvg("a", "geometrico", "bw")), contentType: "image/svg+xml" });
     expect(new TextDecoder().decode(out.bytes)).toContain('fill="url(#wm)"');
   });
-  it("sin soporte para rasters falla cerrado", async () => {
+  it("una imagen que no se puede leer falla cerrado", async () => {
     const { setupEnv } = await import("./helpers");
     setupEnv();
     await expect(applyWatermark({ bytes: tinyJpeg, contentType: "image/png" })).rejects.toThrow();

@@ -38,7 +38,9 @@ Cada punto indica qué se decidió, por qué y cómo cambiarlo. Ordenadas de má
 - Los textos de privacidad, condiciones y cookies son **borradores redactados por Claude**. Hay que revisarlos con un abogado antes de lanzar (en especial la transferencia de fotos a un proveedor de IA fuera de la UE).
 
 ## 10. Servicios sin probar (necesitan cuentas o claves tuyas)
-- Envío de email real (Resend), Google OAuth, Stripe (webhook probado en tests con firmas simuladas, no contra Stripe), Turnstile, proveedor de IA real, marca de agua en imágenes rasterizadas (el proveedor real devuelve PNG y falta el binding de Cloudflare Images), conversión de la máscara al formato "transparente = editar" que pide OpenAI.
+- Envío de email real (Resend), Google OAuth, Stripe (el webhook está probado con firmas simuladas, no contra Stripe), Turnstile y el proveedor de IA real.
+- **Resuelto sin depender de Cloudflare:** la marca de agua sobre imágenes PNG (lo que devuelve un proveedor real) y la conversión de la máscara al formato que pide OpenAI (mismo tamaño que la foto y transparente donde se edita). Lo hace código propio (`src/lib/png.ts`, `stamp.ts`, `mask.ts`) probado contra PNG creados con otra herramienta y comprobando que el resultado se abre en otra herramienta. Solo admite PNG de 8 bits sin entrelazar; cualquier otra cosa falla cerrado (no se entrega un resultado gratuito sin marca). Cuesta unos 70-150 ms de CPU por imagen en un Worker (plan de pago).
+- Lo que falta es verificar que OpenAI acepta exactamente estos parámetros y esta máscara: hay que hacer la prueba corta con una clave de gasto limitado.
 - En desarrollo el correo se imprime por consola y el enlace de acceso aparece en pantalla.
 
 ## 11. Variable `DISABLE_ABUSE_LIMITS`

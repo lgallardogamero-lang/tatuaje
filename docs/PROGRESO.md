@@ -53,3 +53,4 @@ Se actualiza en cada hito. Nada de lo hecho hasta ahora ha costado dinero.
 - [x] **Revisión de seguridad:** pruebas de aislamiento entre usuarios y estudios, CSRF, enlaces de un solo uso, bloqueo de usuarios, webhook; corregida una política de seguridad que se pisaba
 - [x] **Next 16.4:** `npm audit` sin vulnerabilidades; pruebas y empaquetado para Cloudflare siguen pasando
 - [x] 60 pruebas de lógica + 34 de navegador (escritorio y móvil)
+- [x] **Marca de agua en PNG y máscara para OpenAI** con código propio (lector/escritor de PNG, texto en diagonal, conversión de máscara): ya no depende de Cloudflare Images; 69 pruebas de lógica
