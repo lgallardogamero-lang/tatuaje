@@ -39,4 +39,8 @@ Se actualiza en cada hito. Nada de lo hecho hasta ahora ha costado dinero.
 - [x] **Administración:** panel (resumen con ingresos, coste de IA y margen; usuarios; estudios; precios editables; registro de auditoría), roles, bloqueo de usuarios, 36 pruebas de lógica
 - [x] **Legal y privacidad:** banner de cookies con gestión, aviso legal, consentimiento de desistimiento en pagos, descarga de datos, cabeceras de seguridad
 - [x] 16 pruebas de navegador (escritorio y móvil) incluyendo administración y cookies
-- [ ] Pendiente: lado del estudio (panel propio, modo estudio, catálogo de flash, directorio, marca blanca, widget)
+- [x] **Lado del estudio:** panel propio, equipo, catálogo de flash, modo estudio con cupo mensual y resultados sin marca de agua, directorio público por ciudad, solicitudes de clientes con consentimiento
+- [x] 46 pruebas de lógica + 18 de navegador (incluye el recorrido completo: alta del estudio, catálogo, directorio, contacto y generación)
+- [x] Correcciones: fechas en hora de Madrid (evitaba un fallo de hidratación), interruptor del directorio inmediato, botones con nombres distintos, singular de "prueba"
+- [ ] Pendiente estudios: marca blanca, widget, alta sin administrador, suscripción con Stripe, cobro por contacto
+- [ ] Pendiente Fase 6: `worker.ts` (cola y borrado horario en Cloudflare), límites de peticiones en Cloudflare, despliegue

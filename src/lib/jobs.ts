@@ -229,7 +229,9 @@ export async function processJob(jobId: string): Promise<void> {
     if (await isCancelled(jobId)) return;
     await run("UPDATE jobs SET images = ? WHERE id = ?", job.flash_id ? 0 : 1, jobId);
     await storeAsset(jobId, job.user_id, "design", design, 0, expires);
-    await storeAsset(jobId, job.user_id, "design_wm", await applyWatermark(design), 0, expires);
+    // Los resultados del modo estudio salen limpios (paga el estudio): no hay marca de agua.
+    const mark = (img: ImageBytes) => (job.org_id ? Promise.resolve(img) : applyWatermark(img));
+    await storeAsset(jobId, job.user_id, "design_wm", await mark(design), 0, expires);
 
     // Paso 2: aplicarlo sobre la piel dentro de la máscara.
     await setProgress(jobId, 45, "Tatuando la piel");
@@ -250,7 +252,7 @@ export async function processJob(jobId: string): Promise<void> {
     for (let i = 0; i < variants.length; i++) {
       const v = variants[i]!;
       await storeAsset(jobId, job.user_id, "variant", v, i, expires);
-      await storeAsset(jobId, job.user_id, "variant_wm", await applyWatermark(v), i, expires);
+      await storeAsset(jobId, job.user_id, "variant_wm", await mark(v), i, expires);
     }
     const done = await run(
       "UPDATE jobs SET status = 'done', progress = 100, stage = 'Listo', updated_at = ? WHERE id = ? AND status = 'running'",
@@ -258,7 +260,15 @@ export async function processJob(jobId: string): Promise<void> {
       jobId,
     );
     if (done !== 1) await purgeJobFiles(jobId); // se canceló mientras terminaba
-    else await recordUsage(true, (job.flash_id ? 0 : 1) + variants.length);
+    else {
+      await recordUsage(true, (job.flash_id ? 0 : 1) + variants.length);
+      if (job.org_id) {
+        // Descargas HD y stencil incluidas en el plan del estudio, sin alargar la retención de 24 h.
+        for (const kind of ["hd", "stencil"]) {
+          await run("INSERT OR IGNORE INTO entitlements (id, user_id, job_id, kind, created_at) VALUES (?, ?, ?, ?, ?)", newId(), job.user_id, jobId, kind, now());
+        }
+      }
+    }
     if (job.flash_id) await run("UPDATE flash_designs SET tried_count = tried_count + 1 WHERE id = ?", job.flash_id);
   } catch (e) {
     console.error("processJob falló", jobId, e);

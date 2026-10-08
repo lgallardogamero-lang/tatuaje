@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { AdminUserActions } from "@/components/admin/AdminUserActions";
 import { userDetail } from "@/lib/admin";
 import { getUser } from "@/lib/auth";
+import { dateTime } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
 
@@ -20,7 +21,7 @@ export default async function UsuarioDetalle({ params }: { params: Promise<{ id:
   const { id } = await params;
   const [d, me] = await Promise.all([userDetail(id), getUser()]);
   if (!d) notFound();
-  const fmt = new Intl.DateTimeFormat("es-ES", { dateStyle: "medium", timeStyle: "short" });
+  const fmt = dateTime;
   const eur = (c: number) => new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(c / 100);
   return (
     <div className="grid gap-10">

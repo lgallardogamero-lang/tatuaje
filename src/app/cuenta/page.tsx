@@ -5,6 +5,7 @@ import { balance, history } from "@/lib/credits";
 import { listJobs } from "@/lib/jobs";
 import { STYLES } from "@/lib/config";
 import { AccountActions } from "@/components/AccountActions";
+import { dateTime } from "@/lib/format";
 
 export const metadata = { title: "Tu cuenta" };
 
@@ -22,7 +23,7 @@ export default async function Cuenta() {
   const user = await getUser();
   if (!user) redirect("/entrar");
   const [credits, rows, jobs] = await Promise.all([balance(user.id), history(user.id), listJobs(user.id)]);
-  const fmt = new Intl.DateTimeFormat("es-ES", { dateStyle: "medium", timeStyle: "short" });
+  const fmt = dateTime;
   return (
     <div className="wrap grid max-w-3xl gap-10 py-14">
       <div>

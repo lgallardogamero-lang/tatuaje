@@ -2,13 +2,18 @@ import Link from "next/link";
 import { Logo } from "./Logo";
 import { getUser } from "@/lib/auth";
 import { balance } from "@/lib/credits";
+import { getMembership } from "@/lib/studio";
 
 export async function SiteHeader() {
   let user = null;
   let credits = 0;
+  let studio = false;
   try {
     user = await getUser();
-    if (user) credits = await balance(user.id);
+    if (user) {
+      credits = await balance(user.id);
+      studio = Boolean(await getMembership(user.id));
+    }
   } catch {
     // sin base de datos disponible (p. ej. durante la compilación): cabecera pública
   }
@@ -22,6 +27,7 @@ export async function SiteHeader() {
           <Link href="/estudios" className="btn btn-quiet hidden sm:inline-flex">Para estudios</Link>
           {user ? (
             <>
+              {studio && <Link href="/estudio" className="btn btn-quiet">Mi estudio</Link>}
               {user.role === "admin" && <Link href="/admin" className="btn btn-quiet">Administración</Link>}
               <Link href="/cuenta" className="btn btn-quiet" aria-label={`Tu cuenta, ${credits} créditos`}>
                 <span className="text-stencil">{credits}</span>

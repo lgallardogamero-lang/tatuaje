@@ -27,6 +27,13 @@ export function Wizard() {
   const [submitting, setSubmitting] = useState(false);
   const [photo, setPhoto] = useState<Prepared | null>(null);
   const [reference, setReference] = useState<Prepared | null>(null);
+  // Modo estudio: cupo del estudio y catálogo de flash
+  const [studio, setStudio] = useState<{ id: string; name: string; quota: number; used: number } | null>(null);
+  const [useStudio, setUseStudio] = useState(true);
+  const [flash, setFlash] = useState<{ id: string; name: string }[]>([]);
+  const [flashId, setFlashId] = useState<string | null>(null);
+  const [flashBitmap, setFlashBitmap] = useState<ImageBitmap | null>(null);
+  const [source, setSource] = useState<"describe" | "catalog">("describe");
   const [zone, setZone] = useState<(typeof BODY_ZONES)[number]>("antebrazo");
   const [description, setDescription] = useState("");
   const [style, setStyle] = useState<string>("fine-line");
@@ -42,7 +49,8 @@ export function Wizard() {
   const editor = useRef<EditorHandle>(null);
   const live = useRef<HTMLParagraphElement>(null);
 
-  const canContinue = [Boolean(photo), description.trim().length > 0 || Boolean(reference), true][step]!;
+  const studioOn = Boolean(studio) && useStudio;
+  const canContinue = [Boolean(photo), source === "catalog" ? Boolean(flashId) : description.trim().length > 0 || Boolean(reference), true][step]!;
 
   const pickPhoto = useCallback(async (file: File | undefined | null, kind: "photo" | "reference") => {
     if (!file) return;
@@ -62,7 +70,10 @@ export function Wizard() {
     }
   }, []);
 
-  const ghost: Ghost = useMemo(() => (reference ? { kind: "image", bitmap: reference.bitmap } : { kind: "placeholder" }), [reference]);
+  const ghost: Ghost = useMemo(() => {
+    if (source === "catalog" && flashBitmap) return { kind: "image", bitmap: flashBitmap };
+    return reference ? { kind: "image", bitmap: reference.bitmap } : { kind: "placeholder" };
+  }, [reference, source, flashBitmap]);
 
   // Tamaño inicial sugerido según el tamaño elegido
   useEffect(() => {
@@ -76,10 +87,32 @@ export function Wizard() {
 
   // Saldo (si hay sesión) para avisar antes de gastar
   useEffect(() => {
-    api<{ user: unknown; credits?: number }>("/api/me")
-      .then((m) => setCredits(m.user ? (m.credits ?? 0) : null))
+    api<{ user: unknown; credits?: number; studio?: { id: string; name: string; active: boolean; quota: number; used: number } | null }>("/api/me")
+      .then(async (m) => {
+        setCredits(m.user ? (m.credits ?? 0) : null);
+        if (m.studio?.active) {
+          setStudio(m.studio);
+          const f = await api<{ flash: { id: string; name: string }[] }>("/api/studio/flash").catch(() => ({ flash: [] }));
+          setFlash(f.flash);
+        }
+      })
       .catch(() => {});
   }, []);
+
+  // Al elegir un diseño del catálogo, se carga su imagen para usarla de guía en el editor
+  useEffect(() => {
+    setFlashBitmap(null);
+    if (!flashId) return;
+    let alive = true;
+    fetch(`/api/studio/flash/${flashId}/image`)
+      .then((r) => (r.ok ? r.blob() : null))
+      .then((b) => (b ? createImageBitmap(b) : null))
+      .then((bm) => alive && bm && setFlashBitmap(bm))
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, [flashId]);
 
   const submit = useCallback(async () => {
     if (!photo || !editor.current) return;
@@ -89,10 +122,20 @@ export function Wizard() {
       const form = new FormData();
       form.set(
         "options",
-        JSON.stringify({ zone, description: description.trim(), style, color, size, hasReference: Boolean(reference), placement }),
+        JSON.stringify({
+          zone,
+          description: source === "catalog" ? "" : description.trim(),
+          style,
+          color,
+          size,
+          hasReference: source === "catalog" ? false : Boolean(reference),
+          flashId: source === "catalog" && studioOn ? (flashId ?? undefined) : undefined,
+          placement,
+        }),
       );
       form.set("photo", photo.blob, "foto.jpg");
-      if (reference) form.set("reference", reference.blob, "referencia.jpg");
+      if (reference && source !== "catalog") form.set("reference", reference.blob, "referencia.jpg");
+      if (studioOn && studio) form.set("studio", studio.id);
       const mask = await editor.current.getMask();
       if (mask) form.set("mask", mask, "mascara.png");
       const { id } = await api<{ id: string }>("/api/jobs", { method: "POST", body: form });
@@ -100,10 +143,11 @@ export function Wizard() {
     } catch (e) {
       setSubmitting(false);
       if (e instanceof ApiError && e.status === 401) setAuthOpen(true);
+      else if (e instanceof ApiError && e.status === 402 && e.code === "quota") setError(e.message);
       else if (e instanceof ApiError && e.status === 402) setPaywall(true);
       else setError(e instanceof Error ? e.message : "Algo ha fallado. Inténtalo de nuevo");
     }
-  }, [photo, zone, description, style, color, size, reference, placement, router]);
+  }, [photo, zone, description, style, color, size, reference, placement, router, source, flashId, studioOn, studio]);
 
   const reset = () => {
     setStep(0);
@@ -197,6 +241,26 @@ export function Wizard() {
               <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)]">
                 <div className="grid gap-7">
                   <h1 id="paso-titulo" className="text-[clamp(2rem,4.5vw,3.4rem)]">¿Qué tatuaje quieres?</h1>
+                  {studio && flash.length > 0 && (
+                    <div role="group" aria-label="Origen del diseño" className="flex flex-wrap gap-2">
+                      <button type="button" className="chip" aria-pressed={source === "describe"} onClick={() => setSource("describe")}>Describirlo</button>
+                      <button type="button" className="chip" aria-pressed={source === "catalog"} onClick={() => setSource("catalog")}>Del catálogo de {studio.name}</button>
+                    </div>
+                  )}
+                  {source === "catalog" && (
+                    <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3" aria-label="Catálogo de diseños">
+                      {flash.map((f) => (
+                        <li key={f.id}>
+                          <button type="button" aria-pressed={flashId === f.id} onClick={() => setFlashId(f.id)} className={`block w-full overflow-hidden rounded-[10px] border text-left ${flashId === f.id ? "border-stencil" : "border-line hover:border-stencil/60"}`}>
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src={`/api/studio/flash/${f.id}/image`} alt="" className="aspect-square w-full bg-white object-contain" />
+                            <span className="block p-2 text-sm font-semibold">{f.name}</span>
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                  {source === "describe" && (<>
                   <div className="field">
                     <label htmlFor="desc">Descríbelo</label>
                     <textarea id="desc" className="textarea" maxLength={400} value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Un lobo geométrico en línea fina, blanco y negro, minimalista" />
@@ -218,6 +282,7 @@ export function Wizard() {
                       </label>
                     )}
                   </div>
+                  </>)}
                 </div>
                 <div className="grid content-start gap-7">
                   <fieldset className="grid gap-3">
@@ -288,14 +353,20 @@ export function Wizard() {
                 </div>
                 <div className="grid max-w-3xl gap-4">
                   <div className="flex flex-wrap items-center gap-3">
-                    <button className="btn btn-primary text-[1.05rem]" disabled={submitting} onClick={credits === 0 ? () => setPaywall(true) : submit}>
+                    <button className="btn btn-primary text-[1.05rem]" disabled={submitting} onClick={credits === 0 && !studioOn ? () => setPaywall(true) : submit}>
                       {submitting ? "Enviando…" : "Generar mi tatuaje"}
                     </button>
                     <button className="btn btn-ghost" onClick={async () => editor.current && downloadBlob(await editor.current.snapshot(), "calco-colocacion.png")}>Descargar mi colocación</button>
                     <button className="btn btn-quiet" onClick={reset}>Empezar otra prueba</button>
                   </div>
+                  {studio && (
+                    <label className="flex items-center gap-3 text-sm">
+                      <input type="checkbox" className="h-5 w-5 accent-[#a58bff]" checked={useStudio} onChange={(e) => { setUseStudio(e.target.checked); if (!e.target.checked) { setSource("describe"); setFlashId(null); } }} />
+                      Usar el cupo de {studio.name} ({studio.used}/{studio.quota} este mes)
+                    </label>
+                  )}
                   <p className="hint">
-                    {credits === null ? `Te pediremos entrar con tu email. Tienes ${freeCredits} pruebas gratis.` : `Usa 1 crédito. Te quedan ${credits}.`} Tus fotos se borran a las 24 horas.
+                    {studioOn ? "No gasta tus créditos: cuenta en el cupo del estudio." : credits === null ? `Te pediremos entrar con tu email. Tienes ${freeCredits} pruebas gratis.` : `Usa 1 crédito. Te quedan ${credits}.`} Tus fotos se borran a las 24 horas.
                   </p>
                 </div>
               </div>

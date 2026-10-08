@@ -16,6 +16,7 @@ export function SiteFooter() {
           <Link href="/crear" className="hover:text-stencil">Probar un tatuaje</Link>
           <Link href="/#precios" className="hover:text-stencil">Precios</Link>
           <Link href="/estudios" className="hover:text-stencil">Para estudios</Link>
+          <Link href="/directorio" className="hover:text-stencil">Directorio de estudios</Link>
           <Link href="/#preguntas" className="hover:text-stencil">Preguntas frecuentes</Link>
         </nav>
         <nav aria-label="Legal" className="grid content-start gap-2 text-[0.95rem]">

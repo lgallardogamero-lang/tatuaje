@@ -11,7 +11,7 @@ export default function Estudios() {
         Calco para estudios: el cliente se ve el diseño puesto durante la consulta, duda menos y cierras más citas. Se usa en un minuto con una tablet, sin instalar nada.
       </p>
       <p className="notice mt-8 max-w-2xl">
-        <strong>Muy pronto.</strong> Estamos terminando el programa para estudios: cuentas con varios tatuadores, modo estudio para tablet, tu logo y colores, widget para tu web, catálogo de flash y directorio por ciudad. Estos son los planes previstos.
+        <strong>Estamos dando de alta los primeros estudios.</strong> Ya incluye cuentas con varios tatuadores, modo estudio para usar con el cliente, catálogo de flash, directorio por ciudad y solicitudes de clientes. Tu logo y colores y el widget para tu web llegarán más adelante. Estos son los planes previstos.
       </p>
       <div className="mt-10 grid gap-px overflow-hidden rounded-[10px] border border-line bg-line md:grid-cols-3">
         {Object.entries(STUDIO_PLANS).map(([id, p]) => (

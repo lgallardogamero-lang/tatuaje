@@ -54,7 +54,8 @@ Cada punto indica qué se decidió, por qué y cómo cambiarlo. Ordenadas de má
 - **Consentimiento de desistimiento:** el pago con tarjeta exige marcar una casilla (el servidor lo rechaza si falta) y guarda la fecha. El texto exacto debe validarlo un abogado.
 - **Derechos RGPD:** descarga de todos los datos en JSON y borrado desde la cuenta; la privacidad menciona qué ve el administrador.
 - **Cabeceras de seguridad** (CSP, anti-iframe, HSTS, etc.). La CSP lleva `'unsafe-inline'` en scripts porque Next lo necesita sin nonces; mejorable en el futuro. **No probada en producción real.**
-- **Pendiente de la parte de estudios:** el estudio todavía no tiene su propio panel, ni modo estudio en el asistente, ni catálogo de flash, directorio público, marca blanca ni widget. El administrador sí puede crear estudios, activar planes y fijar cupos a mano.
+- **Estudios (hecho):** panel propio (`/estudio`), modo estudio en el asistente con cupo mensual, catálogo de flash, equipo, directorio por ciudad (`/directorio`) y solicitudes de clientes. Decisiones: los resultados del modo estudio salen **sin marca de agua** y con diseño y stencil incluidos (paga el estudio), pero se siguen borrando a las 24 h; el cliente solo comparte su email con el estudio con una casilla de consentimiento expreso que queda registrada (`leads.consent_at`), con límite de 5 contactos al día y 1 por estudio y día; un estudio solo aparece en el directorio con plan activo y si su responsable lo activa (o el administrador).
+- **Estudios (pendiente):** marca blanca (logo y colores del estudio en los resultados), widget embebible para su web, alta de estudios sin pasar por el administrador, suscripción mensual con Stripe (el administrador activa el plan a mano), cobro por contacto a los estudios y estadísticas de diseños más probados por cliente. Sin esto el negocio B2B funciona de forma manual.
 
 ## 13. Otros
 - TypeScript fijado en 5.9 y `next.config.mjs`: Next 15 no soporta TypeScript 7.

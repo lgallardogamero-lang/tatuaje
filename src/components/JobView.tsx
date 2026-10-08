@@ -234,6 +234,7 @@ export function JobView({ id }: { id: string }) {
               )}
               <hr className="rule" />
               <button className="btn btn-ghost" disabled={busy === "regen"} onClick={regenerate}>Regenerar (1 crédito)</button>
+              <Link href={`/directorio?prueba=${id}`} className="btn btn-ghost">Encontrar un estudio</Link>
               <Link href="/crear" className="btn btn-quiet justify-self-start">Probar otro tatuaje</Link>
             </div>
           </div>
@@ -241,7 +242,7 @@ export function JobView({ id }: { id: string }) {
           {notice && <p role="status" className="notice ok">{notice}</p>}
           {error && <p role="alert" className="notice error">{error}</p>}
           <p className="hint max-w-[70ch]">
-            Simulación orientativa: el resultado real depende del tatuador. {hd || stencil ? "Tus resultados comprados se guardan 30 días." : `Tus fotos se borran en ${hoursLeft} h.`}{" "}
+            Simulación orientativa: el resultado real depende del tatuador. {hoursLeft > 30 ? `Tus resultados comprados se guardan ${Math.round(hoursLeft / 24)} días.` : `Tus fotos y resultados se borran en ${hoursLeft} h.`}{" "}
             <Link className="link" href="/cuenta">Borrar ahora</Link>
           </p>
         </div>

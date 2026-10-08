@@ -1,10 +1,11 @@
 import { recentLog } from "@/lib/admin";
+import { dateTime } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
 
 export default async function Registro() {
   const rows = await recentLog(200);
-  const fmt = new Intl.DateTimeFormat("es-ES", { dateStyle: "medium", timeStyle: "short" });
+  const fmt = dateTime;
   return (
     <div className="grid gap-6">
       <div>

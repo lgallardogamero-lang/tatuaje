@@ -1,14 +1,12 @@
 import { getUser } from "@/lib/auth";
 import { balance } from "@/lib/credits";
 import { handle, json } from "@/lib/api";
-import { one } from "@/lib/db";
+import { getMembership } from "@/lib/studio";
 
 export const GET = handle(async () => {
   const user = await getUser();
   if (!user) return json({ user: null });
-  const studio = await one<{ id: string; name: string; slug: string; role: string }>(
-    "SELECT o.id, o.name, o.slug, m.role FROM memberships m JOIN organizations o ON o.id = m.org_id WHERE m.user_id = ? LIMIT 1",
-    user.id,
-  );
+  const m = await getMembership(user.id);
+  const studio = m ? { id: m.orgId, name: m.name, slug: m.slug, role: m.role, active: m.active, quota: m.quota, used: m.used } : null;
   return json({ user, credits: await balance(user.id), studio });
 });

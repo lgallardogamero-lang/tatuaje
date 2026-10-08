@@ -29,7 +29,7 @@ export function AdminChart({ series }: { series: DayRow[] }) {
   const y = (v: number) => M.t + ih - (v / max) * ih;
   const ticks = [0, 0.25, 0.5, 0.75, 1].map((t) => t * max);
   const d = hover !== null ? series[hover] : null;
-  const fmtDay = (s: string) => new Intl.DateTimeFormat("es-ES", { day: "numeric", month: "short" }).format(new Date(`${s}T12:00:00Z`));
+  const fmtDay = (s: string) => new Intl.DateTimeFormat("es-ES", { day: "numeric", month: "short", timeZone: "UTC" }).format(new Date(`${s}T12:00:00Z`));
 
   return (
     <figure className="grid max-w-4xl gap-3">

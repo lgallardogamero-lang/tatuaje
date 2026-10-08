@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { listUsers } from "@/lib/admin";
+import { dateOnly } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
 const PAGE = 25;
@@ -9,7 +10,7 @@ export default async function Usuarios({ searchParams }: { searchParams: Promise
   const q = (sp.q ?? "").slice(0, 80);
   const page = Math.max(0, Number(sp.p ?? 0) || 0);
   const { rows, total } = await listUsers(q, page, PAGE);
-  const fmt = new Intl.DateTimeFormat("es-ES", { dateStyle: "medium" });
+  const fmt = dateOnly;
   const pages = Math.max(1, Math.ceil(total / PAGE));
   const eur = (c: number) => new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(c / 100);
   return (
