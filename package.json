@@ -15,7 +15,10 @@
     "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
     "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts",
     "probar:openai": "vite-node -c vitest.config.ts scripts/probar-openai.ts --",
-    "probar:worker": "bash scripts/probar-worker.sh"
+    "probar:worker": "bash scripts/probar-worker.sh",
+    "marketing:escenas": "node marketing/build/build-scenes.mjs",
+    "marketing:carruseles": "node marketing/build/carruseles.mjs",
+    "marketing:disenos": "vite-node -c vitest.config.ts marketing/build/export-designs.ts"
   },
   "dependencies": {
     "@fontsource-variable/hanken-grotesk": "^5.3.0",

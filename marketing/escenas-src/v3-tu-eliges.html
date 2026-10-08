@@ -1,0 +1,57 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8"><link rel="stylesheet" href="../lib/brand.css"><style>
+.big { position:absolute; left:40px; right:40px; top:84px; font-size:44px; text-shadow:0 2px 18px rgba(0,0,0,.5); }
+.tattoo { left:20px; top:150px; width:500px; height:500px; }
+.card { position:absolute; left:28px; right:28px; top:640px; border-radius:20px; background:rgba(22,25,34,.94); border:1px solid rgba(236,231,220,.14); padding:18px 18px 16px; box-shadow:0 18px 50px rgba(0,0,0,.45); }
+.av { width:42px; height:42px; border-radius:50%; background:linear-gradient(135deg,#a58bff,#6f55d6); flex:none; }
+.cm { font-size:24px; font-weight:600; line-height:1.3; min-height:64px; margin-top:12px; }
+.caret { display:inline-block; width:3px; height:26px; background:#a58bff; vertical-align:-4px; margin-left:2px; }
+.bar { height:8px; border-radius:99px; background:#2a2e3a; overflow:hidden; margin-top:12px; }
+.bar i { display:block; height:100%; width:0; background:#a58bff; border-radius:99px; }
+</style></head><body><div class="stage" style="width:540px;height:960px">
+  <div class="skin"></div>
+  <div class="scrim-top"></div><div class="scrim-bot"></div>
+  <div class="tattoo" id="tat">__SVG:rama__</div>
+  <div class="big display" id="title">Comenta un tatuaje y te lo pruebo en mi brazo</div>
+  <div class="chip" id="ast" style="position:absolute;left:40px;top:222px;opacity:0">*en foto, no de verdad</div>
+  <div class="card" id="card" style="opacity:0">
+    <div style="display:flex;align-items:center;gap:12px"><div class="av"></div><div><div style="font-weight:800;font-size:19px">@tu_comentario</div><div style="color:#a3a4ad;font-size:14px">Así funciona: tú comentas, yo lo pruebo</div></div></div>
+    <div class="cm" id="cm"></div>
+    <div id="gen" style="opacity:0"><div style="font-size:15px;color:#a3a4ad;font-weight:600">Generando la prueba…</div><div class="bar"><i id="bari"></i></div></div>
+  </div>
+  <div id="votes" style="position:absolute;left:28px;right:28px;top:790px;display:flex;gap:10px;opacity:0"><span class="chip" id="v1">Sí, hazlo</span><span class="chip" id="v2">No</span><span class="chip" id="v3">Más pequeño</span></div>
+  <div id="veil" class="abs" style="inset:0;background:#0e1014;opacity:0"></div>
+  <div class="big display" id="end" style="opacity:0;top:110px">Dime qué tatuaje pruebo en el próximo.<br><span style="color:#b9a6ff;font-size:40px">Comenta.</span></div>
+  <div class="abs" id="tag" style="left:40px;right:40px;bottom:70px;opacity:0;display:flex;justify-content:space-between;align-items:center">
+    <span class="chip">Simulación con IA</span>
+    <span class="brand"><svg width="30" height="30" viewBox="0 0 26 26" fill="none"><path d="M4 20 L13 4 L22 20 Z" stroke="#a58bff" stroke-width="1.8" stroke-linejoin="round"/><path d="M8.5 20 L13 12 L17.5 20" stroke="#ece7dc" stroke-width="1.4" stroke-linejoin="round"/><circle cx="13" cy="4" r="1.6" fill="#a58bff"/></svg><span>Calco</span></span>
+  </div>
+  <div class="abs" id="fade" style="inset:0;background:#0e1014"></div>
+</div>
+<script src="../lib/anim.js"></script><script>
+window.DURATION = 18;
+const $ = (id) => document.getElementById(id);
+const ink = new Ink($("tat").querySelector("svg"), { boost: 1.7 });
+const TEXT = "una ramita fina en el antebrazo";
+window.render = (t) => {
+  $("fade").style.opacity = Math.max(1 - E.out(seg(t, 0, 0.5)), E.in(seg(t, 17.5, 18)));
+  reveal($("title"), t, 0.4, 1.2); $("title").style.opacity = Math.min(+$("title").style.opacity, 1 - seg(t, 14.0, 14.4));
+  reveal($("ast"), t, 1.4, 2.0, { dy: 8 }); $("ast").style.opacity = Math.min(+$("ast").style.opacity, 1 - seg(t, 14.0, 14.4));
+  // tarjeta del comentario
+  const c = $("card"); const p = E.back(seg(t, 2.2, 3.0));
+  c.style.opacity = seg(t, 2.2, 2.6) * (1 - E.in(seg(t, 13.8, 14.2))); c.style.transform = `translateY(${(1 - p) * 60}px)`;
+  const typedText = typed(TEXT, seg(t, 3.2, 6.0));
+  const caret = Math.floor(t * 2.2) % 2 === 0 || seg(t, 3.2, 6.0) < 1;
+  $("cm").innerHTML = typedText + (t < 7.0 && caret ? '<span class="caret"></span>' : "");
+  // generando
+  const g = $("gen"); g.style.opacity = seg(t, 6.4, 6.8) * (1 - seg(t, 7.8, 8.2)); $("bari").style.width = 100 * E.io(seg(t, 6.6, 7.8)) + "%";
+  // el tatuaje se calca sobre el brazo
+  ink.set(E.io(seg(t, 7.8, 11.0)), E.soft(seg(t, 11.0, 12.0)));
+  // votación (sin cifras: invita a comentar)
+  const v = $("votes"); v.style.opacity = seg(t, 12.6, 13.0) * (1 - E.in(seg(t, 13.8, 14.2)));
+  ["v1", "v2", "v3"].forEach((id, i) => ($(id).style.transform = `scale(${E.back(seg(t, 12.6 + i * 0.25, 13.3 + i * 0.25))})`));
+  reveal($("end"), t, 14.6, 15.4); $("end").style.opacity = Math.min(+$("end").style.opacity, 1 - E.in(seg(t, 17.4, 17.8)));
+  $("veil").style.opacity = 0.72 * E.soft(seg(t, 14.0, 14.8));
+  $("tag").style.opacity = E.out(seg(t, 12.0, 12.6)) * (1 - E.in(seg(t, 17.4, 17.8)));
+};
+window.render(0);
+</script></body></html>

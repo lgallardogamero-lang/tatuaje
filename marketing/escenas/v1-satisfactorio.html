@@ -1,0 +1,62 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8"><link rel="stylesheet" href="../lib/brand.css"><style>
+.title { position:absolute; left:40px; right:40px; top:96px; font-size:50px; color:#ece7dc; text-shadow:0 2px 18px rgba(0,0,0,.45); }
+.tattoo { left:-60px; top:150px; width:660px; height:660px; }
+.lbl { position:absolute; top:760px; }
+.endcap { position:absolute; left:40px; right:40px; top:96px; font-size:54px; text-shadow:0 2px 18px rgba(0,0,0,.5); }
+</style></head><body><div class="stage" id="stage" style="width:540px;height:960px">
+  <div class="skin"></div>
+  <div class="crease" style="top:300px;opacity:.7"></div><div class="crease" style="top:620px;opacity:.5;left:60px"></div>
+  <div class="tattoo" id="tat"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><g transform="translate(-154 20)" fill="none" stroke="#1b1830" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.6">
+<circle cx="410" cy="236" r="74"/><circle cx="410" cy="236" r="58" stroke-width="1.4"/>
+<path d="M300 372 L372 276 L412 330 L452 288 L536 372"/><path d="M334 372 L372 322 L398 354" stroke-width="1.6"/><path d="M470 372 L500 330" stroke-width="1.6"/>
+<path d="M326 200 Q 410 120 494 200" stroke-width="2"/><path d="M410 150 L410 322" stroke-width="1"/>
+<path d="M300 150 l8 0 M304 146 l0 8" stroke-width="2"/><path d="M520 140 l8 0 M524 136 l0 8" stroke-width="2"/><path d="M548 250 l6 0 M551 247 l0 6" stroke-width="2"/>
+<circle cx="410" cy="236" r="5" fill="#1b1830"/></g></svg>
+</div>
+  <div class="handle" id="handle" style="opacity:0"></div>
+  <div class="knob" id="knob" style="opacity:0;top:480px"><svg width="22" height="22" viewBox="0 0 18 18" fill="none"><path d="M6 4 L2 9 L6 14 M12 4 L16 9 L12 14" stroke="#ece7dc" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+  <div class="scrim-top"></div><div class="scrim-bot"></div>
+  <div class="title display" id="t1">Esto es mi brazo.</div>
+  <div class="title display" id="t2" style="opacity:0">Y esto es mi brazo con un tatuaje que todavía no me hago.</div>
+  <div class="endcap display" id="t3" style="opacity:0">No es de verdad.<br><span style="color:#a58bff">Pero casi.</span></div>
+  <div class="lbl chip violet" id="stencil" style="left:40px;opacity:0">calcando el diseño…</div>
+  <div class="lbl chip" id="lb" style="left:40px;opacity:0">Antes</div>
+  <div class="lbl chip" id="la" style="right:40px;opacity:0">Después</div>
+  <div class="abs" id="tag" style="left:40px;right:40px;bottom:96px;opacity:0;display:flex;justify-content:space-between;align-items:center">
+    <span class="chip">Simulación con IA</span>
+    <span class="brand"><svg width="30" height="30" viewBox="0 0 26 26" fill="none"><path d="M4 20 L13 4 L22 20 Z" stroke="#a58bff" stroke-width="1.8" stroke-linejoin="round"/><path d="M8.5 20 L13 12 L17.5 20" stroke="#ece7dc" stroke-width="1.4" stroke-linejoin="round"/><circle cx="13" cy="4" r="1.6" fill="#a58bff"/></svg><span>Calco</span></span>
+  </div>
+  <div class="abs" id="fade" style="inset:0;background:#0e1014;opacity:1"></div>
+</div>
+<script src="../lib/anim.js"></script><script>
+window.DURATION = 14;
+const $ = (id) => document.getElementById(id);
+const ink = new Ink($("tat").querySelector("svg"), { boost: 1.5 });
+window.render = (t) => {
+  // entrada y bucle: empieza y acaba en negro
+  $("fade").style.opacity = Math.max(1 - E.out(seg(t, 0, 0.5)), E.in(seg(t, 13.5, 14)));
+  // textos
+  reveal($("t1"), t, 0.4, 1.1); $("t1").style.opacity = Math.min(+$("t1").style.opacity, 1 - seg(t, 2.5, 2.9));
+  reveal($("t2"), t, 3.0, 3.8); $("t2").style.opacity = Math.min(+$("t2").style.opacity, 1 - seg(t, 7.6, 8.0));
+  reveal($("t3"), t, 11.6, 12.4); $("t3").style.opacity = Math.min(+$("t3").style.opacity, 1 - seg(t, 13.5, 13.9));
+  // el tatuaje se calca (3.2-7.2) y se asienta (7.2-8.4)
+  ink.set(E.io(seg(t, 3.2, 7.2)), E.soft(seg(t, 7.2, 8.4)));
+  $("stencil").style.opacity = seg(t, 3.4, 3.8) * (1 - seg(t, 7.0, 7.4));
+  // deslizador antes/después (8.6-11.4)
+  let pos = 100;
+  if (t >= 8.4) pos = t < 9.6 ? lerp(100, 18, E.io(seg(t, 8.4, 9.6))) : t < 10.5 ? lerp(18, 82, E.io(seg(t, 9.6, 10.5))) : lerp(82, 30, E.io(seg(t, 10.5, 11.5)));
+  if (t > 11.5) pos = 30;
+  const active = t >= 8.4 && t < 12.6;
+  const tat = $("tat");
+  tat.style.clipPath = active || t >= 12.6 ? `inset(0 0 0 ${pos}%)` : "none";
+  // el clip se aplica sobre toda la capa; ajustamos a coordenadas de la pantalla
+  tat.style.clipPath = active ? `polygon(${pos / 100 * 540 + 60}px 0, 660px 0, 660px 660px, ${pos / 100 * 540 + 60}px 660px)` : "none";
+  const hOp = E.soft(seg(t, 8.2, 8.6)) * (1 - E.soft(seg(t, 12.2, 12.6)));
+  $("handle").style.opacity = hOp; $("knob").style.opacity = hOp;
+  $("handle").style.left = `${pos / 100 * 540}px`; $("knob").style.left = `${pos / 100 * 540}px`;
+  $("lb").style.opacity = hOp; $("la").style.opacity = hOp;
+  // sello
+  $("tag").style.opacity = E.out(seg(t, 12.4, 13.0)) * (1 - E.in(seg(t, 13.5, 13.9)));
+};
+window.render(0);
+</script></body></html>
