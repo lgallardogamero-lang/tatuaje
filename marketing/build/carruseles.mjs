@@ -20,10 +20,17 @@ body{width:540px;height:675px;overflow:hidden;font-family:"Hanken Grotesk",sans-
 .art{width:230px;height:230px;margin:0 auto 22px}.art svg{width:100%;height:100%}
 .art.dk svg *{stroke:#ece7dc}
 .tag{display:inline-block;margin-top:20px;padding:7px 14px;border:1px solid currentColor;border-radius:99px;font-size:13px;font-weight:700;opacity:.7}
-.swipe{position:absolute;right:36px;bottom:26px;font-size:13px;font-weight:700}
+.lg{display:inline-flex;align-items:center;gap:7px;opacity:1}.lg b{font-family:"Gloock",serif;font-size:20px;font-weight:400}.foot{opacity:.9}
+.arm{position:relative;width:100%;height:300px;border-radius:14px;overflow:hidden;margin-bottom:22px;background:linear-gradient(90deg,#6b402b 0%,#a56d4c 10%,#d39a77 26%,#e6b595 40%,#d49d79 58%,#b27a57 78%,#8a5a3d 92%,#5d3724 100%)}
+.arm::after{content:"";position:absolute;inset:0;background:radial-gradient(ellipse 60% 45% at 38% 30%,rgba(255,242,230,.28),rgba(255,242,230,0) 70%)}
+.armtat{position:absolute;left:50%;top:50%;width:280px;height:280px;margin:-140px 0 0 -140px;z-index:1}
+.armlab{position:absolute;left:12px;bottom:12px;z-index:2;font-size:12px;font-weight:700;color:#ece7dc;background:rgba(14,16,20,.74);padding:6px 11px;border-radius:99px}
+.vio .lg svg path:first-child{stroke:#0e1014}.vio .lg svg circle{fill:#0e1014}.swipe{position:absolute;right:36px;bottom:26px;font-size:13px;font-weight:700}
 `;
 
-const S = (cls, i, total, body, foot = "Calco") => `<div class="s ${cls}"><div class="n">${String(i).padStart(2, "0")} / ${String(total).padStart(2, "0")}</div>${body}<div class="foot"><span>${foot}</span>${i < total ? '<span>desliza →</span>' : ""}</div></div>`;
+const LOGO = `<svg width="22" height="22" viewBox="0 0 26 26" fill="none"><path d="M4 20 L13 4 L22 20 Z" stroke="#a58bff" stroke-width="1.8" stroke-linejoin="round"/><path d="M8.5 20 L13 12 L17.5 20" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><circle cx="13" cy="4" r="1.6" fill="#a58bff"/></svg><b>Calco</b>`;
+const arm = (n, label = "Simulación con IA") => `<div class="arm"><div class="armtat">${svg(n)}</div><span class="armlab">${label}</span></div>`;
+const S = (cls, i, total, body, foot = "Calco") => `<div class="s ${cls}"><div class="n">${String(i).padStart(2, "0")} / ${String(total).padStart(2, "0")}</div>${body}<div class="foot"><span class="lg">${LOGO}</span>${i < total ? '<span>desliza →</span>' : ""}</div></div>`;
 
 const carruseles = {
   "c1-el-tatuaje-que-no-me-hice": [
@@ -31,7 +38,7 @@ const carruseles = {
     ["paper", `<div class="art">${svg("luna")}</div><p class="d mid">Tenía el diseño guardado en el móvil.</p>`],
     ["dark", `<p class="d big">Pero había una duda pequeña.</p><p class="sm">«¿Y si en mi piel no queda como en la foto?»</p>`],
     ["paper", `<p class="d mid">Pregunté a tres personas.</p><p class="sm">Tres respuestas distintas. Ninguna con mi muñeca delante.</p>`],
-    ["dark", `<p class="d big">Así que lo probé antes.</p><p class="sm">En una foto de mi brazo, con el tamaño real.</p>`],
+    ["dark", `${arm("leon")}<p class="d mid">Así que lo probé antes.</p><p class="sm">En una foto de mi brazo, con el tamaño real.</p>`],
     ["paper", `<p class="d mid">Y vi algo que no esperaba:</p><p class="d big" style="margin-top:14px">era demasiado pequeña.</p>`],
     ["vio", `<p class="d big">La hice un poco más grande.</p><p class="sm">Cambié de idea en 30 segundos. No en una sesión de dos horas.</p>`],
     ["dark", `<p class="d mid">Ese es el tatuaje que no me hice.</p><p class="sm">El que sí, salió mejor. Pruébatelo antes en <b>Calco</b>.</p><span class="tag">Relato ilustrativo · Simulación con IA</span>`],
@@ -47,7 +54,7 @@ const carruseles = {
     ["vio", `<p class="d mid">7. Puedes verlo antes.</p><p class="sm">Sube tu foto, elige el diseño y mira la simulación. Es orientativa: lo definitivo lo decide tu tatuador.</p><span class="tag">Calco · Simulación con IA</span>`],
   ],
   "c3-estilos-en-una-frase": [
-    ["dark", `<p class="d big">Estilos de tatuaje, en una frase.</p><span class="tag">ilustraciones de ejemplo</span>`],
+    ["dark", `${arm("leon", "Ejemplo ilustrativo")}<p class="d mid">Estilos de tatuaje, en una frase.</p>`],
     ["paper", `<div class="art">${svg("luna")}</div><p class="d mid">Línea fina</p><p class="sm">Trazo delicado, pocos elementos, mucho aire.</p>`],
     ["paper", `<div class="art">${svg("rama")}</div><p class="d mid">Botánico</p><p class="sm">Hojas y ramas que siguen la forma del brazo.</p>`],
     ["paper", `<div class="art">${svg("corazon")}</div><p class="d mid">Tradicional</p><p class="sm">Contorno marcado, formas claras, se lee de lejos.</p>`],
