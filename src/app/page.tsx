@@ -7,13 +7,13 @@ const STEPS = [
   { t: "Sube la foto", d: "De tu brazo, pierna, espalda o la zona que quieras. Desde la galería o con la cámara." },
   { t: "Cuéntanos el diseño", d: "Descríbelo con palabras, sube una referencia o combina las dos cosas." },
   { t: "Colócalo", d: "Pinta la zona con el dedo, muévelo, ajusta el tamaño y gíralo hasta que encaje." },
-  { t: "Compáralo", d: "Recibes tres variantes aplicadas a tu piel y las comparas con la foto original." },
+  { t: "Compáralo", d: "Recibes el resultado aplicado a tu piel y lo comparas con tu foto original deslizando." },
 ];
 
 const FAQ = [
   { q: "¿Qué hacéis con mis fotos?", a: "Las usamos solo para generar tu simulación. Se borran automáticamente a las 24 horas, y puedes borrarlas antes desde tu cuenta con un botón." },
   { q: "¿Se parecerá al tatuaje real?", a: "Es una simulación orientativa. Sirve para decidir tamaño, zona y estilo; el resultado final depende de tu tatuador, de tu piel y de la cicatrización." },
-  { q: "¿Cuánto cuesta?", a: `Tienes ${FREE_CREDITS} pruebas gratis al registrarte. Después compras créditos sueltos, sin suscripción. Cada prueba incluye tres variantes.` },
+  { q: "¿Cuánto cuesta?", a: `Tienes ${FREE_CREDITS} pruebas gratis al registrarte, con una variante y marca de agua. Después compras créditos sueltos, sin suscripción: cada prueba de pago te da tres variantes.` },
   { q: "¿Puedo llevarle el diseño a mi tatuador?", a: "Sí. Puedes descargar el diseño en limpio y en versión stencil, lista para imprimir y transferir." },
   { q: "¿Qué fotos no admitís?", a: "Desnudos, imágenes de menores y contenido violento o de odio. Hay que ser mayor de edad para usar Calco." },
   { q: "¿Soy un estudio de tatuaje, puedo usarlo con mis clientes?", a: "Sí, hay un modo estudio pensado para usarlo con el cliente en una tablet. Mira la página de estudios." },
@@ -68,8 +68,8 @@ export default function Home() {
           </div>
           <hr className="rule" />
           <div>
-            <h3 className="text-2xl">Compara tres variantes</h3>
-            <p className="mt-2 text-bone/75">Cada prueba te da tres versiones. Desliza entre tu foto original y cada resultado para quedarte con la que mejor te encaja.</p>
+            <h3 className="text-2xl">Compara con tu foto original</h3>
+            <p className="mt-2 text-bone/75">Desliza entre tu foto y el resultado. Con las pruebas de pago recibes tres variantes para quedarte con la que mejor te encaja.</p>
           </div>
           <hr className="rule" />
           <div>
@@ -86,13 +86,13 @@ export default function Home() {
 
       <section id="precios" className="wrap py-20" aria-labelledby="precios-t">
         <h2 id="precios-t" className="text-[clamp(2rem,4vw,3.2rem)]">Empieza gratis, paga solo lo que uses</h2>
-        <p className="measure mt-4 text-bone/75">Cada crédito es una prueba con sus tres variantes. Regenerar cuesta otro crédito. Sin suscripciones.</p>
+        <p className="measure mt-4 text-bone/75">Cada crédito es una prueba. Las gratuitas generan una variante; con créditos de pago recibes tres. Regenerar cuesta otro crédito. Sin suscripciones.</p>
         <div className="mt-10 grid gap-px overflow-hidden rounded-[10px] border border-line bg-line md:grid-cols-4">
           <div className="grid content-between gap-8 bg-ink p-7">
             <div>
               <p className="text-sm font-semibold text-stencil">Al registrarte</p>
               <p className="display mt-2 text-5xl">{FREE_CREDITS}</p>
-              <p className="mt-1 text-bone/75">pruebas gratis, con marca de agua</p>
+              <p className="mt-1 text-bone/75">pruebas gratis, con una variante y marca de agua</p>
             </div>
             <Link href="/crear" className="btn btn-ghost">Empezar</Link>
           </div>

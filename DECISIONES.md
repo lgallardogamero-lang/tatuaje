@@ -11,6 +11,8 @@ Cada punto indica qué se decidió, por qué y cómo cambiarlo. Ordenadas de má
 - Como pediste, la parte visible llega hasta la Fase 1 (landing, foto, diseño, editor de máscara y colocación, sin IA).
 - **Ojo:** antes de recibir ese límite ya estaba hecho el backend de las fases 2-4 (créditos, trabajos con proveedor simulado, Stripe, borrado a 24 h) con 27 pruebas. No tiene interfaz completa: faltan la pantalla de resultado, la cuenta y el panel de estudios. Nada de B2B ni administración está construido más allá del esquema de base de datos.
 
+- También se han añadido, aunque son de fases posteriores, páginas mínimas para que ningún enlace dé 404: `/cuenta` (créditos, movimientos, borrar fotos y cuenta; la privacidad lo exigía) y `/estudios` (solo informativa, con los planes previstos y un aviso de "muy pronto").
+
 ## 3. Presupuesto de IA: tope ~0,25 € por generación
 - Coste estimado con el proveedor recomendado (`gpt-image-2`, calidad media): ~0,14 $ por generación de pago (diseño + 3 variantes) y ~0,07 $ por una prueba gratuita (diseño + 1 variante). Cabe en el tope con margen.
 - Calidad "alta" en las variantes llevaría la generación a ~0,5 $, por encima del tope: no se usa. Los precios salen de agregadores y no se han verificado en la web oficial.

@@ -12,6 +12,8 @@ export interface EditorHandle {
   getMask(): Promise<Blob | null>;
   clearMask(): void;
   hasMask(): boolean;
+  /** Imagen de lo que se ve ahora mismo en el editor (foto + guía del diseño). */
+  snapshot(): Promise<Blob>;
 }
 
 interface Props {
@@ -258,6 +260,7 @@ export const PlacementEditor = forwardRef<EditorHandle, Props>(function Placemen
 
   useImperativeHandle(ref, () => ({
     hasMask: () => painted.current,
+    snapshot: () => toBlob(base.current!, "image/png"),
     clearMask: () => {
       const m = maskCanvas.current;
       m?.getContext("2d")!.clearRect(0, 0, m.width, m.height);
