@@ -27,7 +27,7 @@ const TATTOO = (
 function Arm({ withTattoo }: { withTattoo: boolean }) {
   const id = withTattoo ? "t" : "b";
   return (
-    <svg viewBox="0 0 820 560" className="absolute inset-0 h-full w-full" role="img" aria-hidden={!withTattoo} preserveAspectRatio="xMidYMid slice">
+    <svg viewBox="0 0 820 560" className="absolute inset-0 h-full w-full" role="img" aria-label={withTattoo ? "Antebrazo con un tatuaje geométrico de luna y montañas" : "Antebrazo sin tatuaje"} aria-hidden={!withTattoo} preserveAspectRatio="xMidYMid slice">
       <defs>
         {/* Sombreado de cilindro: sombra arriba, luz en el tercio superior, sombra profunda abajo */}
         <linearGradient id={`skin-${id}`} x1="0" y1="0" x2="0" y2="1">

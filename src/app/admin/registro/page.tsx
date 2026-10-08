@@ -15,7 +15,7 @@ export default async function Registro() {
       {rows.length === 0 ? (
         <p className="text-bone/75">Aún no hay acciones registradas.</p>
       ) : (
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto" tabIndex={0} role="region" aria-label="Tabla desplazable">
           <table className="w-full min-w-[40rem] text-left text-sm">
             <thead className="text-mute"><tr><th className="py-2 pr-4 font-semibold">Cuándo</th><th className="pr-4 font-semibold">Quién</th><th className="pr-4 font-semibold">Acción</th><th className="pr-4 font-semibold">Sobre</th><th className="font-semibold">Detalle</th></tr></thead>
             <tbody>

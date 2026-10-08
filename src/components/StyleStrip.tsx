@@ -19,7 +19,7 @@ const SKIN = ["#d6a081", "#c98f6b", "#b9805c", "#dcae92", "#c28965", "#d19b7a"];
 /** Tira horizontal de estilos: cada panel es un trozo de piel con un diseño de ejemplo multiplicado encima. */
 export function StyleStrip() {
   return (
-    <ul className="flex snap-x gap-4 overflow-x-auto pb-6 [scrollbar-width:thin]" style={{ paddingInline: PAD, scrollPaddingInline: PAD }} aria-label="Estilos disponibles">
+    <ul className="flex snap-x gap-4 overflow-x-auto pb-6 [scrollbar-width:thin]" style={{ paddingInline: PAD, scrollPaddingInline: PAD }} aria-label="Estilos disponibles" tabIndex={0}>
       {STYLES.map((s, i) => {
         const svg = designSvg(SAMPLES[s.id] ?? s.id, s.id, s.id === "acuarela" || s.id === "neotradicional" ? "color" : "bw");
         const uri = `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;

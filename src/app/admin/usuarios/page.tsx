@@ -21,7 +21,7 @@ export default async function Usuarios({ searchParams }: { searchParams: Promise
         <input id="q" name="q" defaultValue={q} className="input" placeholder="Buscar por email" />
         <button className="btn btn-ghost">Buscar</button>
       </form>
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto" tabIndex={0} role="region" aria-label="Tabla desplazable">
         <table className="w-full min-w-[46rem] text-left">
           <thead className="text-mute">
             <tr><th className="py-2 pr-4 font-semibold">Email</th><th className="pr-4 font-semibold">Alta</th><th className="pr-4 font-semibold">Créditos</th><th className="pr-4 font-semibold">Pruebas</th><th className="pr-4 font-semibold">Gastado</th><th className="font-semibold">Estado</th></tr>

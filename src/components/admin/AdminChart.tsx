@@ -88,7 +88,7 @@ export function AdminChart({ series }: { series: DayRow[] }) {
       </div>
       <details className="text-sm">
         <summary className="cursor-pointer text-bone/80">Ver como tabla</summary>
-        <div className="mt-3 overflow-x-auto">
+        <div className="mt-3 overflow-x-auto" tabIndex={0} role="region" aria-label="Tabla desplazable">
           <table className="w-full min-w-[32rem] text-left">
             <thead className="text-mute">
               <tr><th className="py-1 pr-4 font-semibold">Día</th><th className="pr-4 font-semibold">Ingresos</th><th className="pr-4 font-semibold">Coste IA</th><th className="pr-4 font-semibold">Generaciones</th><th className="font-semibold">Fallidas</th></tr>
