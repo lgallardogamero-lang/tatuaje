@@ -129,3 +129,29 @@ export function downloadBlob(blob: Blob, filename: string) {
   a.remove();
   setTimeout(() => URL.revokeObjectURL(a.href), 4000);
 }
+
+/** Añade el logo del estudio (abajo a la derecha, sobre una pastilla oscura para que se lea en cualquier foto). */
+export async function withLogo(png: Blob, logoUrl: string): Promise<Blob> {
+  const base = URL.createObjectURL(png);
+  try {
+    const [img, logo] = await Promise.all([loadImage(base), loadImage(logoUrl)]);
+    const canvas = document.createElement("canvas");
+    canvas.width = img.naturalWidth;
+    canvas.height = img.naturalHeight;
+    const ctx = canvas.getContext("2d")!;
+    ctx.drawImage(img, 0, 0);
+    const pad = Math.round(canvas.width * 0.025);
+    const w = Math.max(90, Math.round(canvas.width * 0.16));
+    const h = Math.round(w * (logo.naturalHeight / logo.naturalWidth));
+    const x = canvas.width - w - pad * 2;
+    const y = canvas.height - h - pad * 2;
+    ctx.fillStyle = "rgba(14,16,20,0.72)";
+    ctx.beginPath();
+    ctx.roundRect(x - pad / 2, y - pad / 2, w + pad, h + pad, pad / 2);
+    ctx.fill();
+    ctx.drawImage(logo, x, y, w, h);
+    return await toBlob(canvas, "image/png");
+  } finally {
+    URL.revokeObjectURL(base);
+  }
+}

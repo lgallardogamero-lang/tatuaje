@@ -14,6 +14,7 @@ const patch = z.object({
   contactEmail: z.string().max(254).optional(),
   instagram: z.string().max(40).optional(),
   listed: z.boolean().optional(),
+  accentColor: z.string().max(7).optional(),
 });
 
 export const PATCH = handle(async (req) => {

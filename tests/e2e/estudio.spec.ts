@@ -51,8 +51,9 @@ test("estudio: alta, catálogo, directorio, contacto y generación con el cupo d
   const p = o.page;
   const errores: string[] = [];
   p.on("pageerror", (e) => errores.push(`pageerror: ${e.message}`));
+  // El "status of 400" lo provoca esta misma prueba al intentar guardar un color ilegible (el servidor lo rechaza a propósito).
   // Chromium en modo móvil de Playwright añade `caret-color: transparent` a los campos antes de hidratar: no es de la app.
-  p.on("console", (m) => m.type() === "error" && !m.text().includes('caret-color:"transparent"') && errores.push(`console: ${m.text()}`));
+  p.on("console", (m) => m.type() === "error" && !m.text().includes('caret-color:"transparent"') && !m.text().includes("status of 400") && errores.push(`console: ${m.text()}`));
   await p.goto("/");
   await expect(p.getByRole("link", { name: "Mi estudio" })).toBeVisible();
   await p.goto("/estudio");
@@ -69,6 +70,18 @@ test("estudio: alta, catálogo, directorio, contacto y generación con el cupo d
   await expect(p.getByRole("status").first()).toContainText("Datos guardados");
   await p.getByLabel(new RegExp(`Aparecer en el directorio de estudios de ${city}`)).check();
   await expect(p.getByRole("status").first()).toContainText("Ya apareces en el directorio");
+
+  // marca blanca: color y logo del estudio
+  await p.getByLabel("Color de marca").fill("#ffb347");
+  await p.getByRole("button", { name: "Guardar color" }).click();
+  await expect(p.getByRole("status").first()).toContainText("Color guardado");
+  await p.getByLabel("Color de marca").fill("#101010");
+  await p.getByRole("button", { name: "Guardar color" }).click();
+  await expect(p.getByRole("status").first()).toContainText("demasiado oscuro"); // un color ilegible se rechaza
+  await p.getByLabel("Color de marca").fill("#ffb347");
+  await p.locator("#b-logo").setInputFiles(foto);
+  await expect(p.getByRole("status").first()).toContainText("Logo guardado");
+  await expect(p.getByRole("img", { name: `Logo de ${name}` }).first()).toBeVisible();
 
   // 4) un cliente encuentra el estudio y le escribe (con consentimiento expreso)
   const c = await ctxPage(browser, baseURL);
@@ -103,6 +116,11 @@ test("estudio: alta, catálogo, directorio, contacto y generación con el cupo d
   await p.getByRole("button", { name: "Generar mi tatuaje" }).click();
   await expect(p).toHaveURL(/\/crear\/[0-9a-f-]{36}$/, { timeout: 30_000 });
   await expect(p.getByRole("heading", { name: "Así te queda" })).toBeVisible({ timeout: 45_000 });
+  // marca blanca en el resultado: nombre, logo y color del estudio
+  await expect(p.getByTestId("studio-brand")).toContainText(name);
+  await expect(p.getByRole("img", { name: `Logo de ${name}` })).toBeVisible();
+  const colorBoton = await p.getByRole("button", { name: "Descargar en alta resolución" }).evaluate((el) => getComputedStyle(el).backgroundColor);
+  expect(colorBoton).toBe("rgb(255, 179, 71)"); // #ffb347
   // resultado de estudio: 3 variantes, sin marca de agua y con el stencil incluido
   await expect(p.getByRole("tab")).toHaveCount(3);
   await expect(p.getByRole("button", { name: "Descargar en alta resolución" })).toBeVisible();
@@ -117,4 +135,65 @@ test("estudio: alta, catálogo, directorio, contacto y generación con el cupo d
   expect(errores, errores.join("\n")).toEqual([]);
   await o.ctx.close();
   await a.ctx.close();
+});
+
+test("embudo: un estudio solicita el alta y el administrador la aprueba o rechaza", async ({ browser, baseURL }, info) => {
+  test.setTimeout(150_000);
+  const stamp = Date.now();
+  const ownerEmail = `solicita-${info.project.name}-${stamp}@example.com`;
+  const name = `Sala ${stamp % 100000}`;
+
+  const o = await ctxPage(browser, baseURL);
+  const p = o.page;
+  await p.goto("/estudios");
+  await expect(p.getByRole("link", { name: "Entrar para solicitarlo" })).toBeVisible(); // sin sesión no hay formulario
+  await loginAs(p, ownerEmail);
+  await p.goto("/estudios");
+  const enviar = p.getByRole("button", { name: "Enviar solicitud" });
+  await p.locator("#r-name").fill(name);
+  await p.locator("#r-city").fill("Valencia");
+  await p.locator("#r-mail").fill("hola@sala.example.com");
+  await expect(enviar).toBeDisabled(); // sin la casilla de consentimiento no se envía
+  await p.getByLabel(/Acepto que Calco use estos datos/).check();
+  await enviar.click();
+  await expect(p.getByRole("heading", { name: "Solicitud recibida" })).toBeVisible();
+  await p.reload();
+  await expect(p.getByRole("heading", { name: "Solicitud recibida" })).toBeVisible(); // persiste
+
+  const a = await ctxPage(browser, baseURL);
+  await loginAs(a.page, ADMIN);
+  await a.page.goto("/admin/estudios");
+  await expect(a.page.getByRole("heading", { name: /Solicitudes pendientes/ })).toBeVisible();
+  const tarjeta = a.page.getByRole("listitem").filter({ hasText: name });
+  await expect(tarjeta).toContainText("hola@sala.example.com");
+  await tarjeta.getByRole("button", { name: "Aprobar" }).click();
+  await expect(a.page.getByRole("status").first()).toContainText(`Estudio «${name}» creado`);
+
+  await p.goto("/");
+  await expect(p.getByRole("link", { name: "Mi estudio" })).toBeVisible();
+  await p.goto("/estudio");
+  await expect(p.getByRole("heading", { name })).toBeVisible();
+  await p.goto("/estudios");
+  await expect(p.getByRole("heading", { name: "Tu estudio ya está en Calco" })).toBeVisible();
+
+  // rechazo: otra persona, mismo flujo
+  const o2 = await ctxPage(browser, baseURL);
+  const name2 = `Rechazo ${stamp % 100000}`;
+  await loginAs(o2.page, `rechazo-${info.project.name}-${stamp}@example.com`);
+  await o2.page.goto("/estudios");
+  await o2.page.locator("#r-name").fill(name2);
+  await o2.page.locator("#r-city").fill("Vigo");
+  await o2.page.locator("#r-mail").fill("x@y.example.com");
+  await o2.page.getByLabel(/Acepto que Calco use estos datos/).check();
+  await o2.page.getByRole("button", { name: "Enviar solicitud" }).click();
+  await expect(o2.page.getByRole("heading", { name: "Solicitud recibida" })).toBeVisible();
+  await a.page.goto("/admin/estudios");
+  a.page.once("dialog", (d) => d.accept("Faltan datos"));
+  await a.page.getByRole("listitem").filter({ hasText: name2 }).getByRole("button", { name: "Rechazar" }).click();
+  await expect(a.page.getByRole("status").first()).toContainText("Solicitud rechazada");
+  await o2.page.goto("/estudios");
+  await expect(o2.page.getByText(/no se pudo aprobar/)).toBeVisible();
+  await o.ctx.close();
+  await a.ctx.close();
+  await o2.ctx.close();
 });

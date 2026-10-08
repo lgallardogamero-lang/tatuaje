@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getUser } from "@/lib/auth";
+import { pendingCount } from "@/lib/studio-requests";
 
 export const metadata = { title: "Administración", robots: { index: false, follow: false } };
 
@@ -15,6 +16,7 @@ const LINKS = [
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const user = await getUser();
   if (!user || user.role !== "admin") notFound(); // no revela que existe el panel
+  const pending = await pendingCount();
   return (
     <div className="wrap py-10">
       <div className="mb-8 flex flex-wrap items-center justify-between gap-4 border-b border-line pb-4">
@@ -24,7 +26,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         </div>
         <nav aria-label="Administración" className="flex flex-wrap gap-1">
           {LINKS.map(([href, label]) => (
-            <Link key={href} href={href} className="btn btn-quiet">{label}</Link>
+            <Link key={href} href={href} className="btn btn-quiet">{label}{href === "/admin/estudios" && pending > 0 ? <span className="ml-2 rounded-full bg-stencil px-2 py-0.5 text-xs font-bold text-ink" aria-label={`${pending} solicitudes pendientes`}>{pending}</span> : null}</Link>
           ))}
         </nav>
       </div>

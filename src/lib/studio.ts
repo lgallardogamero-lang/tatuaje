@@ -6,6 +6,9 @@ import { moderateTextLocal } from "./moderation";
 import { deleteObjects, putObject } from "./storage";
 import { hit } from "./ratelimit";
 import { slugify } from "./admin";
+import { sendMail } from "./email";
+import { checkBrandColor } from "./color";
+import { getEnv } from "./env";
 
 export const MAX_MEMBERS = 12;
 export const MAX_FLASH = 100;
@@ -45,7 +48,7 @@ export async function requireMember(userId: string, ownerOnly = false): Promise<
 }
 
 export interface Overview {
-  org: { id: string; name: string; slug: string; city: string; plan: string; active: boolean; listed: boolean; featured: boolean; quota: number; used: number; contact_email: string | null; instagram: string | null };
+  org: { id: string; name: string; slug: string; city: string; plan: string; active: boolean; listed: boolean; featured: boolean; quota: number; used: number; contact_email: string | null; instagram: string | null; accent_color: string; has_logo: boolean };
   members: { user_id: string; email: string; role: string }[];
   flash: { id: string; name: string; style: string | null; tried_count: number }[];
   leads: { id: string; kind: string; message: string | null; email: string; created_at: number }[];
@@ -53,14 +56,14 @@ export interface Overview {
 }
 
 export async function overview(orgId: string): Promise<Overview> {
-  const o = await one<{ id: string; name: string; slug: string; city: string; plan: string; subscription_status: string; listed: number; featured: number; monthly_quota: number; contact_email: string | null; instagram: string | null }>(
-    "SELECT id, name, slug, city, plan, subscription_status, listed, featured, monthly_quota, contact_email, instagram FROM organizations WHERE id = ?",
+  const o = await one<{ id: string; name: string; slug: string; city: string; plan: string; subscription_status: string; listed: number; featured: number; monthly_quota: number; contact_email: string | null; instagram: string | null; accent_color: string; logo_key: string | null }>(
+    "SELECT id, name, slug, city, plan, subscription_status, listed, featured, monthly_quota, contact_email, instagram, accent_color, logo_key FROM organizations WHERE id = ?",
     orgId,
   );
   if (!o) throw new HttpError(404, "Estudio no encontrado");
   const used = (await one<{ used: number }>("SELECT used FROM org_usage WHERE org_id = ? AND month = ?", orgId, monthKey()))?.used ?? 0;
   return {
-    org: { id: o.id, name: o.name, slug: o.slug, city: o.city, plan: o.plan, active: o.subscription_status === "active", listed: Boolean(o.listed), featured: Boolean(o.featured), quota: o.monthly_quota, used, contact_email: o.contact_email, instagram: o.instagram },
+    org: { id: o.id, name: o.name, slug: o.slug, city: o.city, plan: o.plan, active: o.subscription_status === "active", listed: Boolean(o.listed), featured: Boolean(o.featured), quota: o.monthly_quota, used, contact_email: o.contact_email, instagram: o.instagram, accent_color: o.accent_color, has_logo: Boolean(o.logo_key) },
     members: await all("SELECT m.user_id, u.email, m.role FROM memberships m JOIN users u ON u.id = m.user_id WHERE m.org_id = ? ORDER BY m.role, u.email", orgId),
     flash: await all("SELECT id, name, style, tried_count FROM flash_designs WHERE org_id = ? ORDER BY created_at DESC", orgId),
     leads: await all(
@@ -113,7 +116,7 @@ export async function deleteFlash(m: Membership, id: string): Promise<void> {
   await run("DELETE FROM flash_designs WHERE id = ? AND org_id = ?", id, m.orgId);
 }
 
-export async function updateStudioProfile(m: Membership, p: Partial<{ city: string; contactEmail: string; instagram: string; listed: boolean }>): Promise<void> {
+export async function updateStudioProfile(m: Membership, p: Partial<{ city: string; contactEmail: string; instagram: string; listed: boolean; accentColor: string }>): Promise<void> {
   if (m.role !== "owner") throw new HttpError(403, "Solo el responsable puede editar los datos del estudio");
   if (p.city !== undefined) {
     const c = p.city.trim();
@@ -129,6 +132,11 @@ export async function updateStudioProfile(m: Membership, p: Partial<{ city: stri
     const i = p.instagram.trim().replace(/^@/, "");
     if (i && !/^[a-zA-Z0-9._]{1,30}$/.test(i)) throw new HttpError(400, "El usuario de Instagram no es válido");
     await run("UPDATE organizations SET instagram = ? WHERE id = ?", i || null, m.orgId);
+  }
+  if (p.accentColor !== undefined) {
+    const c = checkBrandColor(p.accentColor);
+    if (!c.ok) throw new HttpError(400, c.error);
+    await run("UPDATE organizations SET accent_color = ? WHERE id = ?", p.accentColor.toLowerCase(), m.orgId);
   }
   if (p.listed !== undefined) {
     if (p.listed && !m.active) throw new HttpError(400, "Necesitas un plan activo para aparecer en el directorio");
@@ -165,7 +173,7 @@ export async function directory(citySlug?: string): Promise<{ studios: Directory
 /** Contacto de un usuario con un estudio: exige consentimiento expreso y queda registrado para facturar al estudio. */
 export async function createLead(input: { userId: string; orgId: string; jobId?: string; kind: "contact" | "booking"; message?: string; consent: boolean }): Promise<string> {
   if (input.consent !== true) throw new HttpError(400, "Debes aceptar compartir tu email con el estudio para contactar");
-  const org = await one<{ name: string }>("SELECT name FROM organizations WHERE id = ? AND listed = 1 AND subscription_status = 'active'", input.orgId);
+  const org = await one<{ name: string; contact_email: string | null }>("SELECT name, contact_email FROM organizations WHERE id = ? AND listed = 1 AND subscription_status = 'active'", input.orgId);
   if (!org) throw new HttpError(404, "Este estudio no está disponible");
   const message = (input.message ?? "").trim().slice(0, 500);
   if (message) {
@@ -177,5 +185,40 @@ export async function createLead(input: { userId: string; orgId: string; jobId?:
   if (input.jobId && !(await one("SELECT 1 FROM jobs WHERE id = ? AND user_id = ?", input.jobId, input.userId))) throw new HttpError(400, "Esa prueba no es tuya");
   const id = newId();
   await run("INSERT INTO leads (id, user_id, org_id, job_id, kind, message, consent_at, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", id, input.userId, input.orgId, input.jobId ?? null, input.kind, message || null, now(), now());
+  // Aviso por email al estudio (con lo que el cliente aceptó compartir). Si falla, el contacto ya está guardado y se ve en el panel.
+  const to = org.contact_email ?? (await one<{ email: string }>("SELECT u.email FROM memberships m JOIN users u ON u.id = m.user_id WHERE m.org_id = ? AND m.role = 'owner' LIMIT 1", input.orgId))?.email;
+  const client = await one<{ email: string }>("SELECT email FROM users WHERE id = ?", input.userId);
+  if (to && client) {
+    await sendMail({
+      to,
+      subject: input.kind === "booking" ? "Un cliente quiere reservar contigo" : "Un cliente te ha escrito desde Calco",
+      text: `${client.email} ${input.kind === "booking" ? "quiere reservar" : "te ha escrito"}.\n\n${message || "(sin mensaje)"}\n\nResponde directamente a ese email. También lo ves en ${getEnv().APP_URL}/estudio`,
+    }).catch((e) => console.error("Aviso al estudio falló", e));
+  }
   return id;
+}
+
+export const MAX_LOGO_BYTES = 1024 * 1024;
+
+/** Logo del estudio: solo JPG, PNG o WEBP de hasta 1 MB (nunca SVG, que podría llevar scripts). */
+export async function setLogo(m: Membership, bytes: Uint8Array): Promise<void> {
+  if (m.role !== "owner") throw new HttpError(403, "Solo el responsable puede cambiar el logo");
+  if (bytes.length > MAX_LOGO_BYTES) throw new HttpError(400, "El logo pesa demasiado (máximo 1 MB)");
+  const v = validateImage(bytes);
+  if (!v.ok) throw new HttpError(400, v.error);
+  const key = `org/${m.orgId}/logo`;
+  await putObject(key, bytes, v.type);
+  await run("UPDATE organizations SET logo_key = ? WHERE id = ?", key, m.orgId);
+}
+
+export async function removeLogo(m: Membership): Promise<void> {
+  if (m.role !== "owner") throw new HttpError(403, "Solo el responsable puede cambiar el logo");
+  const row = await one<{ logo_key: string | null }>("SELECT logo_key FROM organizations WHERE id = ?", m.orgId);
+  if (row?.logo_key) await deleteObjects([row.logo_key]);
+  await run("UPDATE organizations SET logo_key = NULL WHERE id = ?", m.orgId);
+}
+
+export async function logoOf(orgId: string): Promise<{ key: string } | null> {
+  const row = await one<{ logo_key: string | null }>("SELECT logo_key FROM organizations WHERE id = ?", orgId);
+  return row?.logo_key ? { key: row.logo_key } : null;
 }

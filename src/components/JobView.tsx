@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { STYLES, eur } from "@/lib/config";
 import { usePricing } from "@/lib/client/usePricing";
 import { api, ApiError } from "@/lib/client/api";
-import { downloadBlob, makeStencil, toPngBlob } from "@/lib/client/image";
+import { downloadBlob, makeStencil, toPngBlob, withLogo } from "@/lib/client/image";
 import { CompareSlider } from "./CompareSlider";
 import { Paywall } from "./Paywall";
 
@@ -21,6 +21,7 @@ interface JobData {
   variants: number;
   hasOriginal: boolean;
   entitlements: string[];
+  studio: { name: string; accent: string; hasLogo: boolean } | null;
 }
 
 const MESSAGES = ["Preparando la piel", "Dibujando el diseño", "Calcando el stencil", "Tatuando la piel", "Asentando la tinta", "Revelando el resultado"];
@@ -113,7 +114,11 @@ export function JobView({ id }: { id: string }) {
   });
 
   const download = (what: "variant" | "design" | "stencil") => action(`dl-${what}`, async () => {
-    if (what === "variant") downloadBlob(await toPngBlob(`/api/jobs/${id}/files/variant-${variant}`), `calco-tatuaje-${variant + 1}.png`);
+    if (what === "variant") {
+      let png = await toPngBlob(`/api/jobs/${id}/files/variant-${variant}`);
+      if (job?.studio?.hasLogo) png = await withLogo(png, `/api/jobs/${id}/studio`).catch(() => png); // marca blanca: el logo del estudio en la imagen que se lleva el cliente
+      downloadBlob(png, `calco-tatuaje-${variant + 1}.png`);
+    }
     else if (what === "design") downloadBlob(await toPngBlob(`/api/jobs/${id}/files/design`), "calco-diseno.png");
     else downloadBlob(await makeStencil(`/api/jobs/${id}/files/design`), "calco-stencil.png");
   });
@@ -141,8 +146,14 @@ export function JobView({ id }: { id: string }) {
   const hoursLeft = Math.max(0, Math.round((job.expiresAt - Date.now()) / 3600_000));
 
   return (
-    <div className="wrap max-w-5xl py-10 sm:py-14">
+    <div className="wrap max-w-5xl py-10 sm:py-14" style={job.studio ? ({ "--color-stencil": job.studio.accent } as React.CSSProperties) : undefined}>
       <Paywall open={paywall} onClose={() => setPaywall(false)} />
+      {job.studio && (
+        <p className="mb-6 flex items-center gap-3 text-bone/85" data-testid="studio-brand">
+          {job.studio.hasLogo && /* eslint-disable-next-line @next/next/no-img-element */ <img src={`/api/jobs/${id}/studio`} alt={`Logo de ${job.studio.name}`} className="h-9 w-auto max-w-40 rounded-sm object-contain" />}
+          <span className="font-semibold">{job.studio.name}</span>
+        </p>
+      )}
 
       {(job.status === "queued" || job.status === "running") && (
         <div className="grid justify-items-center gap-8 py-10 text-center" role="status" aria-live="polite">

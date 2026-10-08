@@ -54,3 +54,20 @@ CREATE TABLE leads (
 );
 CREATE INDEX leads_org ON leads(org_id, created_at);
 ALTER TABLE jobs ADD COLUMN flash_id TEXT;
+
+-- Solicitudes de alta de estudios (las aprueba un administrador)
+CREATE TABLE studio_requests (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL REFERENCES users(id),
+  name TEXT NOT NULL,
+  city TEXT NOT NULL,
+  contact_email TEXT NOT NULL,
+  instagram TEXT,
+  plan_wanted TEXT NOT NULL CHECK (plan_wanted IN ('basic','pro','premium')),
+  message TEXT,
+  status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending','approved','rejected')),
+  decided_by TEXT,
+  decided_at INTEGER,
+  created_at INTEGER NOT NULL
+);
+CREATE INDEX studio_requests_status ON studio_requests(status, created_at);

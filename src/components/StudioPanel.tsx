@@ -15,6 +15,8 @@ export function StudioPanel({ data, isOwner, selfId }: { data: Overview; isOwner
   const [flashName, setFlashName] = useState("");
   const [flashStyle, setFlashStyle] = useState("");
   const [listed, setListed] = useState(data.org.listed);
+  const [color, setColor] = useState(data.org.accent_color);
+  const [logoVer, setLogoVer] = useState(0);
   const pct = data.org.quota > 0 ? Math.min(100, Math.round((data.org.used / data.org.quota) * 100)) : 0;
 
   async function uploadFlash(e: React.FormEvent<HTMLFormElement>) {
@@ -106,6 +108,35 @@ export function StudioPanel({ data, isOwner, selfId }: { data: Overview; isOwner
             <div className="field"><label htmlFor="p-ig">Instagram</label><input id="p-ig" className="input" placeholder="tuestudio" value={profile.instagram} onChange={(e) => setProfile({ ...profile, instagram: e.target.value })} /></div>
             <div><button className="btn btn-primary" disabled={busy}>Guardar datos</button></div>
           </form>
+          <div className="grid max-w-xl gap-4" role="group" aria-labelledby="marca">
+            <h3 id="marca" className="text-xl">Marca del estudio</h3>
+            <p className="hint">Tu logo y tu color aparecen en los resultados que ven tus clientes y en las imágenes que descargan.</p>
+            <div className="flex flex-wrap items-end gap-3">
+              <div className="field">
+                <label htmlFor="b-color">Color de marca</label>
+                <div className="flex gap-2">
+                  <input id="b-color-pick" type="color" aria-label="Elegir color" className="h-12 w-14 cursor-pointer rounded-md border border-line bg-panel p-1" value={color} onChange={(e) => setColor(e.target.value)} />
+                  <input id="b-color" className="input w-32" value={color} maxLength={7} onChange={(e) => setColor(e.target.value)} />
+                </div>
+              </div>
+              <button type="button" className="btn btn-ghost" disabled={busy} onClick={() => run("/api/studio", { method: "PATCH", json: { accentColor: color } }, "Color guardado")}>Guardar color</button>
+            </div>
+            <div className="flex flex-wrap items-center gap-4">
+              {data.org.has_logo && /* eslint-disable-next-line @next/next/no-img-element */ <img src={`/api/studio/logo?v=${logoVer}`} alt={`Logo de ${data.org.name}`} className="h-14 w-auto max-w-48 rounded-md border border-line bg-panel object-contain p-1" />}
+              <div className="field">
+                <label htmlFor="b-logo">{data.org.has_logo ? "Cambiar el logo" : "Subir el logo"} (JPG, PNG o WEBP, máx. 1 MB)</label>
+                <input id="b-logo" type="file" accept="image/jpeg,image/png,image/webp" className="input pt-2.5" onChange={async (e) => {
+                  const file = e.target.files?.[0];
+                  if (!file) return;
+                  const fd = new FormData();
+                  fd.set("file", file);
+                  if (await run("/api/studio/logo", { method: "POST", body: fd } as never, "Logo guardado")) setLogoVer((v) => v + 1);
+                  e.target.value = "";
+                }} />
+              </div>
+              {data.org.has_logo && <button type="button" className="btn btn-quiet text-danger" disabled={busy} onClick={() => run("/api/studio/logo", { method: "DELETE" }, "Logo quitado")}>Quitar logo</button>}
+            </div>
+          </div>
           <label className="flex items-center gap-3">
             <input
               type="checkbox"

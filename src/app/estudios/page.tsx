@@ -1,9 +1,17 @@
 import Link from "next/link";
 import { STUDIO_PLANS, eur } from "@/lib/config";
+import { StudioRequestForm } from "@/components/StudioRequestForm";
+import { getUser } from "@/lib/auth";
+import { myLatestRequest } from "@/lib/studio-requests";
+import { getMembership } from "@/lib/studio";
 
 export const metadata = { title: "Para estudios de tatuaje" };
 
-export default function Estudios() {
+export const dynamic = "force-dynamic";
+
+export default async function Estudios() {
+  const user = await getUser();
+  const [req, member] = user ? await Promise.all([myLatestRequest(user.id), getMembership(user.id)]) : [null, null];
   return (
     <div className="wrap py-14">
       <h1 className="max-w-[18ch] text-[clamp(2.4rem,6vw,4.6rem)]">Que tus clientes vean el tatuaje antes de reservar</h1>
@@ -28,6 +36,13 @@ export default function Estudios() {
         ))}
       </div>
       <p className="hint mt-4">Precios orientativos, con IVA incluido. Pueden cambiar antes del lanzamiento.</p>
+      <div className="mt-12 max-w-3xl">
+        {member ? (
+          <div className="panel grid gap-3 p-6"><h2 className="text-2xl">Tu estudio ya está en Calco</h2><Link href="/estudio" className="btn btn-primary w-fit">Ir a Mi estudio</Link></div>
+        ) : (
+          <StudioRequestForm signedIn={Boolean(user)} status={req?.status ?? null} />
+        )}
+      </div>
       <Link href="/" className="btn btn-ghost mt-10">Volver al inicio</Link>
     </div>
   );

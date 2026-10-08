@@ -42,6 +42,11 @@ Se actualiza en cada hito. Nada de lo hecho hasta ahora ha costado dinero.
 - [x] **Lado del estudio:** panel propio, equipo, catálogo de flash, modo estudio con cupo mensual y resultados sin marca de agua, directorio público por ciudad, solicitudes de clientes con consentimiento
 - [x] 46 pruebas de lógica + 18 de navegador (incluye el recorrido completo: alta del estudio, catálogo, directorio, contacto y generación)
 - [x] Correcciones: fechas en hora de Madrid (evitaba un fallo de hidratación), interruptor del directorio inmediato, botones con nombres distintos, singular de "prueba"
-- [ ] Pendiente estudios: marca blanca, widget, alta sin administrador, suscripción con Stripe, cobro por contacto
 - [x] `worker.ts` (cola y borrado horario), compilación OpenNext y validación `wrangler --dry-run` correctas; 49 pruebas de lógica
 - [ ] Pendiente Fase 6: desplegar de verdad en Cloudflare, reglas de límite de peticiones y regla de ciclo de vida en R2 (necesitan tu cuenta), pruebas con servicios reales
+- [x] **Accesibilidad:** auditorías axe en 10 pantallas (escritorio y móvil); corregidos 3 fallos
+- [x] **Páginas 404 y de error, robots, sitemap, imagen para redes**
+- [x] **Embudo de estudios:** solicitud de alta pública, cola de aprobación en el panel de administración, emails de aviso
+- [x] **Marca blanca:** color y logo del estudio en resultados y descargas
+- [x] 59 pruebas de lógica + 30 de navegador
+- [ ] Pendiente estudios: widget embebible, suscripción con Stripe, cobro por contacto, estadísticas por cliente

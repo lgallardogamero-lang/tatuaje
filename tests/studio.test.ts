@@ -148,3 +148,37 @@ describe("perfil del estudio", () => {
     await expect(updateStudioProfile(await requireMember("artist"), { city: "Madrid" })).rejects.toThrow(/responsable/);
   });
 });
+
+describe("marca blanca", () => {
+  it("rechaza colores ilegibles o con formato incorrecto y acepta los claros", async () => {
+    const { checkBrandColor, contrast } = await import("@/lib/color");
+    expect(checkBrandColor("rojo").ok).toBe(false);
+    expect(checkBrandColor("#000000").ok).toBe(false); // negro: se confunde con el fondo
+    expect(checkBrandColor("#2a3a8f").ok).toBe(false); // azul oscuro: el texto del botón no se lee
+    expect(checkBrandColor("#a58bff").ok).toBe(true); // el violeta de la marca
+    expect(checkBrandColor("#ffb347").ok).toBe(true);
+    expect(contrast("#ffffff", "#000000")).toBeCloseTo(21, 0);
+    const m = await requireMember("owner");
+    await expect(updateStudioProfile(m, { accentColor: "#111111" })).rejects.toThrow(/oscuro|fondo/);
+    await updateStudioProfile(m, { accentColor: "#FFB347" });
+    expect((await overview(orgId)).org.accent_color).toBe("#ffb347");
+    await addMember(m, "tatuador@estudio.es");
+    await expect(updateStudioProfile(await requireMember("artist"), { accentColor: "#ffb347" })).rejects.toThrow(/responsable/);
+  });
+
+  it("el logo solo admite imágenes pequeñas reales (nunca SVG) y se puede quitar", async () => {
+    const { setLogo, removeLogo, logoOf, MAX_LOGO_BYTES } = await import("@/lib/studio");
+    const m = await requireMember("owner");
+    await expect(setLogo(m, new TextEncoder().encode('<svg xmlns="http://www.w3.org/2000/svg" onload="alert(1)"></svg>'))).rejects.toThrow();
+    await expect(setLogo(m, new Uint8Array(MAX_LOGO_BYTES + 1))).rejects.toThrow(/pesa demasiado/);
+    await setLogo(m, tinyJpeg);
+    expect(ctx.BUCKET.store.has(`org/${orgId}/logo`)).toBe(true);
+    expect((await overview(orgId)).org.has_logo).toBe(true);
+    expect(await logoOf(orgId)).not.toBeNull();
+    await addMember(m, "tatuador@estudio.es");
+    await expect(setLogo(await requireMember("artist"), tinyJpeg)).rejects.toThrow(/responsable/);
+    await removeLogo(m);
+    expect(ctx.BUCKET.store.has(`org/${orgId}/logo`)).toBe(false);
+    expect((await overview(orgId)).org.has_logo).toBe(false);
+  });
+});

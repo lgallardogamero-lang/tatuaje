@@ -55,13 +55,20 @@ Cada punto indica qué se decidió, por qué y cómo cambiarlo. Ordenadas de má
 - **Derechos RGPD:** descarga de todos los datos en JSON y borrado desde la cuenta; la privacidad menciona qué ve el administrador.
 - **Cabeceras de seguridad** (CSP, anti-iframe, HSTS, etc.). La CSP lleva `'unsafe-inline'` en scripts porque Next lo necesita sin nonces; mejorable en el futuro. **No probada en producción real.**
 - **Estudios (hecho):** panel propio (`/estudio`), modo estudio en el asistente con cupo mensual, catálogo de flash, equipo, directorio por ciudad (`/directorio`) y solicitudes de clientes. Decisiones: los resultados del modo estudio salen **sin marca de agua** y con diseño y stencil incluidos (paga el estudio), pero se siguen borrando a las 24 h; el cliente solo comparte su email con el estudio con una casilla de consentimiento expreso que queda registrada (`leads.consent_at`), con límite de 5 contactos al día y 1 por estudio y día; un estudio solo aparece en el directorio con plan activo y si su responsable lo activa (o el administrador).
-- **Estudios (pendiente):** marca blanca (logo y colores del estudio en los resultados), widget embebible para su web, alta de estudios sin pasar por el administrador, suscripción mensual con Stripe (el administrador activa el plan a mano), cobro por contacto a los estudios y estadísticas de diseños más probados por cliente. Sin esto el negocio B2B funciona de forma manual.
+- **Alta de estudios por solicitud:** cualquier usuario con cuenta puede pedirla en `/estudios`; yo no activo nada solo. La apruebas o rechazas tú en `/admin/estudios`, con aviso por email a ti (todos los de `ADMIN_EMAILS`) y a quien la pidió. Se puede elegir el plan al aprobar, incluido "sin plan". Hay límites: una solicitud pendiente por persona y 3 al día.
+- **Aviso al estudio por email** cuando un cliente le escribe (solo con el consentimiento del cliente). Hoy el correo se imprime en consola; funcionará de verdad cuando configures Resend.
+- **Marca blanca:** color y logo del estudio en sus resultados y en las imágenes descargadas. El color se rechaza si no se lee (contraste mínimo 4,5:1 con el texto de los botones y 3:1 con el fondo). El logo: solo JPG, PNG o WEBP de hasta 1 MB, nunca SVG (podría llevar scripts).
+- **Estudios (pendiente):** widget embebible para su web, suscripción mensual con Stripe (el plan se activa a mano), cobro por contacto a los estudios y estadísticas por cliente. El negocio B2B funciona de forma manual hasta que se haga.
 
 ## 13. Despliegue: preparado pero sin desplegar
 - `worker.ts` añade a la web el consumidor de la cola de generaciones y la tarea horaria de borrado; el código que corre fuera de una petición web obtiene su entorno con `withEnv` (`src/lib/env.ts`). Probado con pruebas unitarias, con la compilación real de OpenNext y con `wrangler deploy --dry-run`. **Nunca se ha ejecutado en Cloudflare** (la cola y el cron solo se pueden comprobar ahí).
 - `QUEUE_MODE` queda en `queue` en `wrangler.jsonc` y en `inline` en `.dev.vars`. Los pasos y la lista de comprobaciones están en el README.
 
-## 14. Otros
+## 14. Accesibilidad y SEO
+- Auditorías automáticas con axe (WCAG 2.1 A/AA): pasan en las páginas públicas, el asistente, la cuenta, el resultado y todo el panel de administración. Corregí tres fallos que encontraron (tira de estilos sin acceso por teclado, ilustración sin texto alternativo y tablas desplazables). Una auditoría automática no sustituye a una revisión manual con lector de pantalla.
+- Hay páginas 404 y de error con la marca, `robots.txt` (bloquea API, administración, cuenta, estudio y resultados), `sitemap.xml` e imagen para redes.
+
+## 15. Otros
 - TypeScript fijado en 5.9 y `next.config.mjs`: Next 15 no soporta TypeScript 7.
 - Las muestras de la galería y el proveedor simulado son ilustraciones SVG generadas por código; no representan la calidad de la IA real. Para una landing definitiva conviene sustituirlas por resultados reales.
 - Retención: las fotos subidas se borran a las 24 h siempre; los resultados comprados se conservan 30 días.

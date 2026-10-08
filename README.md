@@ -15,8 +15,8 @@ Si cambias una migración antes de desplegar, recrea la base local: `rm -rf .wra
 
 ## Pruebas
 ```bash
-npm test            # lógica: créditos, trabajos, Stripe, moderación (46 pruebas)
-npm run test:e2e    # navegador real, escritorio y móvil (18 pruebas; requiere `npm run dev` en marcha)
+npm test            # lógica: créditos, trabajos, Stripe, moderación (59 pruebas)
+npm run test:e2e    # navegador real, escritorio y móvil (30 pruebas; requiere `npm run dev` en marcha)
 npm run typecheck
 ```
 
@@ -26,6 +26,11 @@ resumen de ingresos, coste de IA y margen · usuarios (regalar o quitar crédito
 
 ## Estudios
 El administrador da de alta el estudio (`/admin/estudios`) con su responsable y su plan. El responsable ve **Mi estudio** (`/estudio`): uso mensual, catálogo de flash, equipo, datos para el directorio y solicitudes de clientes. En el asistente, quien pertenece a un estudio activo puede usar el cupo del estudio y probar diseños del catálogo; sus resultados salen sin marca de agua. El directorio público está en `/directorio`.
+
+Los estudios pueden **solicitar el alta** desde `/estudios` (tú recibes un aviso por email y la apruebas o rechazas en `/admin/estudios`). El responsable personaliza su **marca** (color y logo), que aparece en los resultados de sus clientes y en las imágenes que descargan. Cuando un cliente le escribe desde el directorio, el estudio recibe un email.
+
+## Accesibilidad y SEO
+`npm run test:e2e` incluye auditorías automáticas con axe (WCAG 2.1 A/AA) en las pantallas principales. Hay `robots.txt`, `sitemap.xml` e imagen para redes (`public/og.png`, se regenera con `node scripts/og.mjs`). Al compilar para producción define `NEXT_PUBLIC_APP_URL` con tu dominio.
 
 ## Estructura
 - `src/app` páginas y rutas de la API · `src/components` interfaz · `src/lib` lógica (auth, créditos, trabajos, Stripe, moderación) · `src/lib/providers` proveedores de IA tras una interfaz común · `src/prompts` plantillas de prompt versionadas · `migrations` esquema D1 · `docs` diseño técnico.
