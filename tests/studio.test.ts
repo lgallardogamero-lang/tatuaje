@@ -182,3 +182,17 @@ describe("marca blanca", () => {
     expect((await overview(orgId)).org.has_logo).toBe(false);
   });
 });
+
+describe("página pública del estudio", () => {
+  it("solo se muestra si el estudio está activo y en el directorio", async () => {
+    const { publicStudio } = await import("@/lib/studio");
+    expect(await publicStudio("sevilla")).toBeNull();
+    const [row] = await all<{ slug: string }>("SELECT slug FROM organizations WHERE id = ?", orgId);
+    expect(await publicStudio(row!.slug)).toBeNull(); // existe pero no está en el directorio
+    await updateStudioProfile(await requireMember("owner"), { listed: true, instagram: "tintasur", accentColor: "#ffb347" });
+    expect(await publicStudio(row!.slug)).toMatchObject({ id: orgId, name: "Tinta Sur", city: "Sevilla", instagram: "tintasur", accent: "#ffb347", hasLogo: false });
+    await updateOrg(admin, orgId, { status: "inactive" });
+    expect(await publicStudio(row!.slug)).toBeNull(); // sin plan activo desaparece
+    expect(await publicStudio("no-existe")).toBeNull();
+  });
+});

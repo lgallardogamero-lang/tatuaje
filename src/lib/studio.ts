@@ -48,7 +48,7 @@ export async function requireMember(userId: string, ownerOnly = false): Promise<
 }
 
 export interface Overview {
-  org: { id: string; name: string; slug: string; city: string; plan: string; active: boolean; listed: boolean; featured: boolean; quota: number; used: number; contact_email: string | null; instagram: string | null; accent_color: string; has_logo: boolean };
+  org: { id: string; name: string; slug: string; city: string; plan: string; active: boolean; listed: boolean; featured: boolean; quota: number; used: number; contact_email: string | null; instagram: string | null; accent_color: string; has_logo: boolean; subscription_status: string; billing: "stripe" | "manual" | "none" };
   members: { user_id: string; email: string; role: string }[];
   flash: { id: string; name: string; style: string | null; tried_count: number }[];
   leads: { id: string; kind: string; message: string | null; email: string; created_at: number }[];
@@ -56,14 +56,14 @@ export interface Overview {
 }
 
 export async function overview(orgId: string): Promise<Overview> {
-  const o = await one<{ id: string; name: string; slug: string; city: string; plan: string; subscription_status: string; listed: number; featured: number; monthly_quota: number; contact_email: string | null; instagram: string | null; accent_color: string; logo_key: string | null }>(
-    "SELECT id, name, slug, city, plan, subscription_status, listed, featured, monthly_quota, contact_email, instagram, accent_color, logo_key FROM organizations WHERE id = ?",
+  const o = await one<{ id: string; name: string; slug: string; city: string; plan: string; subscription_status: string; listed: number; featured: number; monthly_quota: number; contact_email: string | null; instagram: string | null; accent_color: string; logo_key: string | null; stripe_subscription_id: string | null; stripe_customer_id: string | null }>(
+    "SELECT id, name, slug, city, plan, subscription_status, listed, featured, monthly_quota, contact_email, instagram, accent_color, logo_key, stripe_subscription_id, stripe_customer_id FROM organizations WHERE id = ?",
     orgId,
   );
   if (!o) throw new HttpError(404, "Estudio no encontrado");
   const used = (await one<{ used: number }>("SELECT used FROM org_usage WHERE org_id = ? AND month = ?", orgId, monthKey()))?.used ?? 0;
   return {
-    org: { id: o.id, name: o.name, slug: o.slug, city: o.city, plan: o.plan, active: o.subscription_status === "active", listed: Boolean(o.listed), featured: Boolean(o.featured), quota: o.monthly_quota, used, contact_email: o.contact_email, instagram: o.instagram, accent_color: o.accent_color, has_logo: Boolean(o.logo_key) },
+    org: { id: o.id, name: o.name, slug: o.slug, city: o.city, plan: o.plan, active: o.subscription_status === "active", listed: Boolean(o.listed), featured: Boolean(o.featured), quota: o.monthly_quota, used, contact_email: o.contact_email, instagram: o.instagram, accent_color: o.accent_color, has_logo: Boolean(o.logo_key), subscription_status: o.subscription_status, billing: o.stripe_customer_id ? "stripe" : o.subscription_status === "active" ? "manual" : "none" },
     members: await all("SELECT m.user_id, u.email, m.role FROM memberships m JOIN users u ON u.id = m.user_id WHERE m.org_id = ? ORDER BY m.role, u.email", orgId),
     flash: await all("SELECT id, name, style, tried_count FROM flash_designs WHERE org_id = ? ORDER BY created_at DESC", orgId),
     leads: await all(
@@ -221,4 +221,23 @@ export async function removeLogo(m: Membership): Promise<void> {
 export async function logoOf(orgId: string): Promise<{ key: string } | null> {
   const row = await one<{ logo_key: string | null }>("SELECT logo_key FROM organizations WHERE id = ?", orgId);
   return row?.logo_key ? { key: row.logo_key } : null;
+}
+
+export interface PublicStudio {
+  id: string;
+  name: string;
+  slug: string;
+  city: string;
+  instagram: string | null;
+  accent: string;
+  hasLogo: boolean;
+}
+
+/** Datos públicos de un estudio, solo si está activo y en el directorio. */
+export async function publicStudio(slug: string): Promise<PublicStudio | null> {
+  const o = await one<{ id: string; name: string; slug: string; city: string; instagram: string | null; accent_color: string; logo_key: string | null }>(
+    "SELECT id, name, slug, city, instagram, accent_color, logo_key FROM organizations WHERE slug = ? AND listed = 1 AND subscription_status = 'active'",
+    slug,
+  );
+  return o ? { id: o.id, name: o.name, slug: o.slug, city: o.city, instagram: o.instagram, accent: o.accent_color, hasLogo: Boolean(o.logo_key) } : null;
 }

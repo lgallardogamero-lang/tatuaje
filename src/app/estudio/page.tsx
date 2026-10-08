@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { StudioPanel } from "@/components/StudioPanel";
 import { getUser } from "@/lib/auth";
 import { getMembership, overview } from "@/lib/studio";
+import { getEnv } from "@/lib/env";
 
 export const metadata = { title: "Mi estudio" };
 export const dynamic = "force-dynamic";
@@ -23,7 +24,7 @@ export default async function Estudio() {
       <div className="flex flex-wrap gap-3">
         <Link href="/crear" className="btn btn-primary">Probar un tatuaje con un cliente</Link>
       </div>
-      <StudioPanel data={data} isOwner={m.role === "owner"} selfId={user.id} />
+      <StudioPanel data={data} isOwner={m.role === "owner"} selfId={user.id} shareUrl={`${getEnv().APP_URL.replace(/\/$/, "")}/e/${data.org.slug}`} />
     </div>
   );
 }

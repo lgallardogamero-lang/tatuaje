@@ -43,6 +43,7 @@ Con la prueba anterior ya sabrás el coste real por imagen. Pásamelo y ajusto e
 3. Claves de prueba: `npx wrangler secret put STRIPE_SECRET_KEY` (la `sk_test_...`).
 4. Webhook: en Stripe → Developers → Webhooks, añade `https://TU-DOMINIO/api/stripe/webhook` con los eventos que lista el README, y guarda el secreto: `npx wrangler secret put STRIPE_WEBHOOK_SECRET`.
 5. Compra de prueba con la tarjeta `4242 4242 4242 4242`: deben sumarse los créditos. Si va bien, repites con las claves reales.
+6. Suscripción de estudio (prueba): entra como responsable de un estudio sin plan, en `/estudio` marca la casilla y pulsa «Contratar»; tras pagar con la tarjeta de prueba el plan debe aparecer activo. Comprueba también «Gestionar suscripción y facturas» (activa antes el portal de clientes en Stripe → Settings → Billing → Customer portal).
 
 ## 6. Entrar con Google (opcional, 15 minutos, gratis)
 En Google Cloud Console → credenciales OAuth: URI de redirección `https://TU-DOMINIO/api/auth/google/callback`. Secretos: `GOOGLE_CLIENT_ID` y `GOOGLE_CLIENT_SECRET`. Si no lo configuras, el botón de Google no aparece y se entra solo con enlace por email.

@@ -1,4 +1,5 @@
 import { expect, test, type Browser, type Page } from "@playwright/test";
+import AxeBuilder from "@axe-core/playwright";
 import path from "node:path";
 
 const ADMIN = "lgallardogamero@gmail.com";
@@ -59,6 +60,8 @@ test("estudio: alta, catálogo, directorio, contacto y generación con el cupo d
   await p.goto("/estudio");
   await expect(p.getByRole("heading", { name })).toBeVisible();
   await expect(p.getByText("de 300 generaciones")).toBeVisible();
+  await expect(p.getByText(/Plan Pro activo, con 300 generaciones al mes/)).toBeVisible();
+  await expect(p.getByText(/Lo ha activado Calco directamente/)).toBeVisible(); // alta manual: sin suscripción de Stripe
   await p.getByLabel("Nombre del diseño").fill("Rosa clásica");
   await p.locator("#fl-file").setInputFiles(foto);
   await p.getByRole("button", { name: "Añadir al catálogo" }).click();
@@ -196,4 +199,107 @@ test("embudo: un estudio solicita el alta y el administrador la aprueba o rechaz
   await o.ctx.close();
   await a.ctx.close();
   await o2.ctx.close();
+});
+
+test("página pública del estudio: marca, recorrido del cliente hasta contactar y estudios ocultos", async ({ browser, baseURL }, info) => {
+  test.setTimeout(150_000);
+  const stamp = Date.now();
+  const name = `Pública ${stamp % 100000}`;
+  const ownerEmail = `pub-${info.project.name}-${stamp}@example.com`;
+
+  const o = await ctxPage(browser, baseURL);
+  await loginAs(o.page, ownerEmail);
+  const a = await ctxPage(browser, baseURL);
+  await loginAs(a.page, ADMIN);
+  // alta por API (más rápido que por pantalla)
+  const alta = await a.page.request.post("/api/admin/orgs", { data: { name, city: "Granada", ownerEmail, plan: "pro" } });
+  expect(alta.status()).toBe(201);
+  const me = (await (await o.page.request.get("/api/me")).json()) as { studio: { slug: string } };
+  const slug = me.studio.slug;
+
+  // oculto mientras no se lista
+  const anon = await ctxPage(browser, baseURL);
+  expect((await anon.page.goto(`/e/${slug}`))!.status()).toBe(404);
+  expect((await anon.page.request.get(`/api/public/studio/${slug}`)).status()).toBe(404);
+  expect((await anon.page.request.get(`/api/public/studio/${slug}/logo`)).status()).toBe(404);
+
+  // el responsable lo lista, pone color y logo, y ve su enlace para compartir
+  const foto = path.resolve(import.meta.dirname, "../fixtures/antebrazo.jpg");
+  expect((await o.page.request.patch("/api/studio", { data: { listed: true, accentColor: "#ffb347", instagram: "publica" } })).status()).toBe(200);
+  await o.page.goto("/estudio");
+  await o.page.locator("#b-logo").setInputFiles(foto);
+  await expect(o.page.getByRole("status").first()).toContainText("Logo guardado");
+  await expect(o.page.getByLabel("Enlace de tu página")).toHaveValue(new RegExp(`/e/${slug}$`));
+
+  // la página pública: nombre, logo y color del estudio
+  const p = anon.page;
+  await p.goto(`/e/${slug}`);
+  await expect(p.getByText(name, { exact: true })).toBeVisible();
+  await expect(p.getByRole("img", { name: `Logo de ${name}` })).toBeVisible();
+  const color = await p.locator("#contenido").getByRole("link", { name: "Probar un tatuaje" }).evaluate((el) => getComputedStyle(el).backgroundColor);
+  expect(color).toBe("rgb(255, 179, 71)");
+  expect((await p.request.get(`/api/public/studio/${slug}/logo`)).status()).toBe(200);
+  await p.waitForTimeout(600);
+  const graves = (await new AxeBuilder({ page: p }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"]).analyze()).violations.filter((v) => v.impact === "serious" || v.impact === "critical");
+  expect(graves.map((v) => `${v.id}: ${v.help}`)).toEqual([]);
+  await p.screenshot({ path: `screenshots/estudio-publica-${info.project.name}.png` });
+  await anon.ctx.close();
+
+  // un cliente llega desde esa página, prueba un tatuaje y contacta con el estudio desde el resultado
+  const c = await ctxPage(browser, baseURL);
+  await loginAs(c.page, `pubcli-${info.project.name}-${stamp}@example.com`);
+  await c.page.goto(`/e/${slug}`);
+  await c.page.locator("#contenido").getByRole("link", { name: "Probar un tatuaje" }).click();
+  await expect(c.page).toHaveURL(new RegExp(`/crear\\?e=${slug}$`));
+  await c.page.getByTestId("photo-input").setInputFiles(foto);
+  await expect(c.page.getByText(/Foto lista/)).toBeVisible();
+  await c.page.getByRole("button", { name: "Continuar con el diseño" }).click();
+  await c.page.getByLabel("Descríbelo").fill("Una rosa fina");
+  await c.page.getByRole("button", { name: "Continuar con la colocación" }).click();
+  await c.page.getByRole("button", { name: "Generar mi tatuaje" }).click();
+  await expect(c.page).toHaveURL(new RegExp(`/crear/[0-9a-f-]{36}\\?e=${slug}$`), { timeout: 30_000 });
+  await expect(c.page.getByRole("heading", { name: "Así te queda" })).toBeVisible({ timeout: 45_000 });
+  await expect(c.page.getByText(`¿Te gusta? Hazlo en ${name}`)).toBeVisible();
+  await c.page.getByRole("button", { name: "Contactar" }).click();
+  const dlg = c.page.getByRole("dialog");
+  await dlg.getByRole("button", { name: "Quiero reservar" }).click();
+  await dlg.getByLabel(/Acepto que Calco comparta mi email/).check();
+  await dlg.getByRole("button", { name: "Enviar" }).click();
+  await expect(dlg.getByRole("status")).toContainText("recibirá tu mensaje");
+
+  // el estudio ve la solicitud, ligada a esa prueba
+  await o.page.goto("/estudio");
+  await expect(o.page.getByText(`pubcli-${info.project.name}-${stamp}@example.com`)).toBeVisible();
+  await expect(o.page.getByText("Quiere reservar")).toBeVisible();
+  for (const x of [o.ctx, a.ctx, c.ctx]) await x.close();
+});
+
+test("plan del estudio: sin plan se ofrece contratar con consentimiento; sin Stripe configurado avisa", async ({ browser, baseURL }, info) => {
+  test.setTimeout(100_000);
+  const stamp = Date.now();
+  const ownerEmail = `sinplan-${info.project.name}-${stamp}@example.com`;
+  const o = await ctxPage(browser, baseURL);
+  await loginAs(o.page, ownerEmail);
+  const a = await ctxPage(browser, baseURL);
+  await loginAs(a.page, ADMIN);
+  expect((await a.page.request.post("/api/admin/orgs", { data: { name: `Sin plan ${stamp % 100000}`, city: "Murcia", ownerEmail, plan: "none" } })).status()).toBe(201);
+
+  const p = o.page;
+  await p.goto("/estudio");
+  await expect(p.getByText(/no está activo/).first()).toBeVisible();
+  await expect(p.getByText(/Elige un plan para usar el modo estudio/)).toBeVisible();
+  const contratar = p.getByRole("button", { name: "Contratar Pro" });
+  await expect(contratar).toBeDisabled(); // sin consentimiento expreso no se puede pagar
+  // el servidor también lo exige aunque se salte la pantalla
+  const sinConsentimiento = await p.request.post("/api/studio/subscribe", { data: { plan: "pro" } });
+  expect(sinConsentimiento.status()).toBe(400);
+  await p.getByLabel(/pierdo el derecho de desistimiento/).check();
+  await contratar.click();
+  await expect(p.getByRole("alert").filter({ hasText: "pagos aún no están activados" })).toBeVisible(); // en local no hay Stripe
+  // un cliente sin estudio no puede contratar planes ni abrir el portal
+  const c = await ctxPage(browser, baseURL);
+  await loginAs(c.page, `sinplan-cli-${info.project.name}-${stamp}@example.com`);
+  expect((await c.page.request.post("/api/studio/subscribe", { data: { plan: "pro", withdrawalConsent: true } })).status()).toBe(403);
+  expect((await c.page.request.post("/api/studio/portal")).status()).toBe(403);
+  for (const x of [o.ctx, a.ctx, c.ctx]) await x.close();
 });

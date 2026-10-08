@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { AnimatePresence, MotionConfig, motion } from "motion/react";
 import { BODY_ZONES, SIZES, STYLES } from "@/lib/config";
 import { api, ApiError } from "@/lib/client/api";
@@ -19,6 +19,7 @@ const DEFAULT_PLACEMENT: Placement = { x: 0.5, y: 0.5, scale: 0.35, rotation: 0,
 
 export function Wizard() {
   const router = useRouter();
+  const origen = useSearchParams().get("e"); // estudio desde cuyo enlace llega el cliente
   const [step, setStep] = useState(0);
   const [credits, setCredits] = useState<number | null>(null);
   const { freeCredits } = usePricing();
@@ -139,7 +140,7 @@ export function Wizard() {
       const mask = await editor.current.getMask();
       if (mask) form.set("mask", mask, "mascara.png");
       const { id } = await api<{ id: string }>("/api/jobs", { method: "POST", body: form });
-      router.push(`/crear/${id}`);
+      router.push(`/crear/${id}${origen && /^[a-z0-9-]{1,60}$/.test(origen) ? `?e=${origen}` : ""}`);
     } catch (e) {
       setSubmitting(false);
       if (e instanceof ApiError && e.status === 401) setAuthOpen(true);
@@ -147,7 +148,7 @@ export function Wizard() {
       else if (e instanceof ApiError && e.status === 402) setPaywall(true);
       else setError(e instanceof Error ? e.message : "Algo ha fallado. Inténtalo de nuevo");
     }
-  }, [photo, zone, description, style, color, size, reference, placement, router, source, flashId, studioOn, studio]);
+  }, [photo, zone, description, style, color, size, reference, placement, router, source, flashId, studioOn, studio, origen]);
 
   const reset = () => {
     setStep(0);

@@ -49,10 +49,13 @@ Se actualiza en cada hito. Nada de lo hecho hasta ahora ha costado dinero.
 - [x] **Embudo de estudios:** solicitud de alta pública, cola de aprobación en el panel de administración, emails de aviso
 - [x] **Marca blanca:** color y logo del estudio en resultados y descargas
 - [x] 59 pruebas de lógica + 30 de navegador
-- [ ] Pendiente estudios: widget embebible, suscripción con Stripe, cobro por contacto, estadísticas por cliente
 - [x] **Revisión de seguridad:** pruebas de aislamiento entre usuarios y estudios, CSRF, enlaces de un solo uso, bloqueo de usuarios, webhook; corregida una política de seguridad que se pisaba
 - [x] **Next 16.4:** `npm audit` sin vulnerabilidades; pruebas y empaquetado para Cloudflare siguen pasando
 - [x] 60 pruebas de lógica + 34 de navegador (escritorio y móvil)
 - [x] **Marca de agua en PNG y máscara para OpenAI** con código propio (lector/escritor de PNG, texto en diagonal, conversión de máscara): ya no depende de Cloudflare Images; 69 pruebas de lógica
 - [x] **Proveedor OpenAI probado contra un servidor local que imita su API:** forma de las peticiones, máscara, reintentos ante 429, fallo y reembolso ante 400, rechazo de respuestas ilegibles; 73 pruebas de lógica
 - [x] `npm run probar:openai`: prueba corta y controlada (2 llamadas) para cuando tengas la clave; `docs/MANANA.md`: guía de lo que necesito de ti
+- [x] **Página pública de cada estudio** (`/e/su-estudio`) con su marca y recorrido del cliente hasta contactar
+- [x] **Suscripción de estudios con Stripe** (contratar, portal de cliente, pausa por impago, cancelación); webhook probado
+- [x] 78 pruebas de lógica + 38 de navegador
+- [ ] Pendiente estudios: cobro por contacto, estadísticas por cliente

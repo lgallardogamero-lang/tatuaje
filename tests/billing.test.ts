@@ -81,3 +81,48 @@ describe("derechos de descarga", () => {
     expect(await all("SELECT 1 FROM entitlements")).toHaveLength(0);
   });
 });
+
+describe("suscripciones de estudios (webhook)", () => {
+  const ev = (id: string, type: string, object: Record<string, unknown>) => ({ id, type, data: { object } });
+  async function org() {
+    await run("INSERT INTO organizations (id, name, slug, city, created_at) VALUES ('o1','Tinta','tinta-sevilla','Sevilla',?)", Date.now());
+    return (await one<Record<string, unknown>>("SELECT * FROM organizations WHERE id = 'o1'"))!;
+  }
+  const checkout = (id: string, plan = "pro") =>
+    ev(id, "checkout.session.completed", { id: `cs_${id}`, mode: "subscription", payment_status: "paid", client_reference_id: "u1", customer: "cus_1", subscription: "sub_1", metadata: { kind: "subscription", orgId: "o1", plan } });
+
+  it("al pagar la suscripción se activa el plan con su cupo y se guardan los datos de Stripe", async () => {
+    await org();
+    expect(await handleStripeEvent(checkout("e1"))).toBe("processed");
+    const o = (await one<Record<string, unknown>>("SELECT plan, subscription_status, monthly_quota, stripe_customer_id, stripe_subscription_id FROM organizations WHERE id = 'o1'"))!;
+    expect(o).toMatchObject({ plan: "pro", subscription_status: "active", monthly_quota: 300, stripe_customer_id: "cus_1", stripe_subscription_id: "sub_1" });
+    expect(await handleStripeEvent(checkout("e1"))).toBe("duplicate"); // un reenvío no hace nada
+  });
+
+  it("el plan Premium además lo muestra y destaca en el directorio", async () => {
+    await org();
+    await handleStripeEvent(checkout("e2", "premium"));
+    expect(await one("SELECT 1 FROM organizations WHERE id = 'o1' AND listed = 1 AND featured = 1")).toBeTruthy();
+  });
+
+  it("un plan que no existe o un estudio inexistente no activan nada", async () => {
+    await org();
+    expect(await handleStripeEvent(checkout("e3", "gratis"))).toBe("ignored");
+    expect((await one<{ subscription_status: string }>("SELECT subscription_status FROM organizations WHERE id = 'o1'"))!.subscription_status).toBe("inactive");
+  });
+
+  it("si falla un cobro el estudio se pausa, y si se cancela pierde plan y cupo", async () => {
+    await org();
+    await handleStripeEvent(checkout("e4"));
+    await handleStripeEvent(ev("e5", "invoice.payment_failed", { subscription: "sub_1" }));
+    expect((await one<{ subscription_status: string }>("SELECT subscription_status FROM organizations WHERE id = 'o1'"))!.subscription_status).toBe("past_due");
+    // pausado: no puede generar con el cupo (la cobranza exige estado 'active')
+    const { createJob, QuotaError } = await import("@/lib/jobs");
+    await expect(createJob({ userId: "u1", orgId: "o1", options: { zone: "brazo", description: "x", style: "old-school", color: "bw", size: "mediano", hasReference: false, placement: { x: 0.5, y: 0.5, scale: 0.4, rotation: 0, opacity: 1 } }, photo: { bytes: tinyJpeg, contentType: "image/jpeg" } })).rejects.toBeInstanceOf(QuotaError);
+    // se recupera al pagar
+    await handleStripeEvent(ev("e6", "customer.subscription.updated", { id: "sub_1", status: "active" }));
+    expect((await one<{ subscription_status: string }>("SELECT subscription_status FROM organizations WHERE id = 'o1'"))!.subscription_status).toBe("active");
+    await handleStripeEvent(ev("e7", "customer.subscription.deleted", { id: "sub_1" }));
+    expect(await one<Record<string, unknown>>("SELECT plan, subscription_status, monthly_quota FROM organizations WHERE id = 'o1'")).toMatchObject({ plan: "none", subscription_status: "canceled", monthly_quota: 0 });
+  });
+});

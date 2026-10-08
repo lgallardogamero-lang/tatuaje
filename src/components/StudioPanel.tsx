@@ -1,14 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { STYLES } from "@/lib/config";
+import { STUDIO_PLANS, STYLES, eur } from "@/lib/config";
+import { api, ApiError } from "@/lib/client/api";
 import type { Overview } from "@/lib/studio";
 import { useAdminAction } from "@/lib/client/useAdmin";
 import { dateTime } from "@/lib/format";
 
 const fmt = dateTime;
 
-export function StudioPanel({ data, isOwner, selfId }: { data: Overview; isOwner: boolean; selfId: string }) {
+export function StudioPanel({ data, isOwner, selfId, shareUrl }: { data: Overview; isOwner: boolean; selfId: string; shareUrl: string }) {
   const { busy, msg, run } = useAdminAction();
   const [email, setEmail] = useState("");
   const [profile, setProfile] = useState({ city: data.org.city, contactEmail: data.org.contact_email ?? "", instagram: data.org.instagram ?? "" });
@@ -17,6 +18,18 @@ export function StudioPanel({ data, isOwner, selfId }: { data: Overview; isOwner
   const [listed, setListed] = useState(data.org.listed);
   const [color, setColor] = useState(data.org.accent_color);
   const [logoVer, setLogoVer] = useState(0);
+  const [copied, setCopied] = useState(false);
+  const [consent, setConsent] = useState(false);
+  const [payError, setPayError] = useState("");
+  async function pay(url: string, json?: unknown) {
+    setPayError("");
+    try {
+      const r = await api<{ url: string }>(url, { method: "POST", json });
+      window.location.href = r.url;
+    } catch (e) {
+      setPayError(e instanceof ApiError ? e.message : "No se pudo iniciar el pago");
+    }
+  }
   const pct = data.org.quota > 0 ? Math.min(100, Math.round((data.org.used / data.org.quota) * 100)) : 0;
 
   async function uploadFlash(e: React.FormEvent<HTMLFormElement>) {
@@ -39,6 +52,49 @@ export function StudioPanel({ data, isOwner, selfId }: { data: Overview; isOwner
   return (
     <div className="grid gap-12">
       {msg && <p role="status" className={`notice ${msg.ok ? "ok" : "error"}`}>{msg.text}</p>}
+
+      {data.org.listed && data.org.active && (
+        <section aria-labelledby="enlace" className="grid gap-3">
+          <h2 id="enlace" className="text-2xl">Tu página para clientes</h2>
+          <p className="measure text-bone/75">Compártela en Instagram, en tu web o en un QR del mostrador. Tus clientes ven tu marca, prueban un tatuaje y te escriben desde ahí.</p>
+          <div className="flex flex-wrap items-center gap-3">
+            <input readOnly aria-label="Enlace de tu página" className="input max-w-lg" value={shareUrl} onFocus={(e) => e.currentTarget.select()} />
+            <button type="button" className="btn btn-ghost" onClick={() => navigator.clipboard?.writeText(shareUrl).then(() => { setCopied(true); setTimeout(() => setCopied(false), 2500); })}>{copied ? "Enlace copiado" : "Copiar enlace"}</button>
+          </div>
+        </section>
+      )}
+
+      {isOwner && (
+        <section aria-labelledby="plan" className="grid gap-4">
+          <h2 id="plan" className="text-2xl">Tu plan</h2>
+          {data.org.active ? (
+            <>
+              <p className="text-bone/80">Plan <strong>{STUDIO_PLANS[data.org.plan as keyof typeof STUDIO_PLANS]?.label ?? data.org.plan}</strong> activo, con {data.org.quota} generaciones al mes.{data.org.billing === "manual" ? " Lo ha activado Calco directamente." : ""}</p>
+              {data.org.billing === "stripe" && <button className="btn btn-ghost w-fit" onClick={() => pay("/api/studio/portal")}>Gestionar suscripción y facturas</button>}
+            </>
+          ) : (
+            <>
+              <p className="text-bone/80">{data.org.subscription_status === "past_due" ? "No hemos podido cobrar tu última cuota. Actualiza la tarjeta para reactivar el plan." : "Elige un plan para usar el modo estudio con tus clientes. Se cobra cada mes y puedes cancelar cuando quieras."}</p>
+              {data.org.billing === "stripe" && <button className="btn btn-primary w-fit" onClick={() => pay("/api/studio/portal")}>Actualizar el método de pago</button>}
+              <label className="flex items-start gap-3 text-[0.9rem] text-bone/80">
+                <input type="checkbox" className="mt-1 h-5 w-5 shrink-0 accent-[#a58bff]" checked={consent} onChange={(e) => setConsent(e.target.checked)} />
+                <span>Quiero que el servicio empiece ya y entiendo que pierdo el derecho de desistimiento de 14 días sobre el periodo ya prestado.</span>
+              </label>
+              <ul className="grid gap-3 sm:grid-cols-3">
+                {Object.entries(STUDIO_PLANS).map(([id, p]) => (
+                  <li key={id} className="panel grid gap-2 p-4">
+                    <h3 className="text-xl">{p.label}</h3>
+                    <p><span className="display text-3xl">{eur(p.priceCents)}</span> <span className="text-mute">/mes</span></p>
+                    <p className="hint">{p.quota} generaciones al mes</p>
+                    <button className="btn btn-primary btn-sm" disabled={!consent} onClick={() => pay("/api/studio/subscribe", { plan: id, withdrawalConsent: consent })}>Contratar {p.label}</button>
+                  </li>
+                ))}
+              </ul>
+              {payError && <p role="alert" className="notice error">{payError}</p>}
+            </>
+          )}
+        </section>
+      )}
 
       <section aria-labelledby="uso" className="grid gap-3">
         <h2 id="uso" className="text-2xl">Uso de este mes</h2>

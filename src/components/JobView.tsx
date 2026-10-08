@@ -9,6 +9,7 @@ import { api, ApiError } from "@/lib/client/api";
 import { downloadBlob, makeStencil, toPngBlob, withLogo } from "@/lib/client/image";
 import { CompareSlider } from "./CompareSlider";
 import { Paywall } from "./Paywall";
+import { ContactStudio } from "./ContactStudio";
 
 interface JobData {
   id: string;
@@ -38,6 +39,7 @@ export function JobView({ id }: { id: string }) {
   const [consent, setConsent] = useState(false);
   const [msgIdx, setMsgIdx] = useState(0);
   const failures = useRef(0);
+  const [origin, setOrigin] = useState<{ id: string; name: string } | null>(null);
   const { assets: ASSET_PRODUCTS } = usePricing();
 
   const load = useCallback(async () => {
@@ -76,6 +78,16 @@ export function JobView({ id }: { id: string }) {
     const t = setInterval(() => setMsgIdx((i) => (i + 1) % MESSAGES.length), 2600);
     return () => clearInterval(t);
   }, [job?.status]);
+
+  // Si el cliente llegó desde la página de un estudio, se le ofrece contactar con él
+  useEffect(() => {
+    const slug = sp.get("e");
+    if (!slug || !/^[a-z0-9-]{1,60}$/.test(slug)) return;
+    fetch(`/api/public/studio/${slug}`)
+      .then((r) => (r.ok ? (r.json() as Promise<{ id: string; name: string }>) : null))
+      .then((s) => s && setOrigin({ id: s.id, name: s.name }))
+      .catch(() => {});
+  }, [sp]);
 
   useEffect(() => {
     if (sp.get("pago") === "ok") setNotice("Pago recibido. Tus créditos o tu descarga se actualizan en unos segundos.");
@@ -245,6 +257,12 @@ export function JobView({ id }: { id: string }) {
               )}
               <hr className="rule" />
               <button className="btn btn-ghost" disabled={busy === "regen"} onClick={regenerate}>Regenerar (1 crédito)</button>
+              {origin && (
+                <div className="panel grid gap-3 p-4">
+                  <p className="font-semibold">¿Te gusta? Hazlo en {origin.name}</p>
+                  <ContactStudio orgId={origin.id} orgName={origin.name} jobId={id} signedIn />
+                </div>
+              )}
               <Link href={`/directorio?prueba=${id}`} className="btn btn-ghost">Encontrar un estudio</Link>
               <Link href="/crear" className="btn btn-quiet justify-self-start">Probar otro tatuaje</Link>
             </div>
