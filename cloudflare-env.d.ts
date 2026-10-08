@@ -20,4 +20,5 @@ interface CloudflareEnv {
   GOOGLE_CLIENT_SECRET?: string;
   TURNSTILE_SECRET?: string;
   ADMIN_EMAILS?: string;
+  DISABLE_ABUSE_LIMITS?: string;
 }

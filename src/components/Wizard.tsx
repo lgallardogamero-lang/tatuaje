@@ -1,10 +1,15 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { AnimatePresence, MotionConfig, motion } from "motion/react";
 import { BODY_ZONES, SIZES, STYLES } from "@/lib/config";
+import { api, ApiError } from "@/lib/client/api";
 import { downloadBlob, prepareImage, type Prepared } from "@/lib/client/image";
 import type { Placement } from "@/lib/schema";
+import { AuthForm } from "./AuthForm";
+import { Modal } from "./Modal";
+import { Paywall } from "./Paywall";
 import { PlacementEditor, type EditorHandle, type Ghost, type Tool } from "./PlacementEditor";
 
 const STEPS = ["Foto", "Diseño", "Colocación"] as const;
@@ -12,7 +17,12 @@ const ZONE_LABEL: Record<string, string> = { brazo: "Brazo", antebrazo: "Antebra
 const DEFAULT_PLACEMENT: Placement = { x: 0.5, y: 0.5, scale: 0.35, rotation: 0, opacity: 0.9 };
 
 export function Wizard() {
+  const router = useRouter();
   const [step, setStep] = useState(0);
+  const [credits, setCredits] = useState<number | null>(null);
+  const [authOpen, setAuthOpen] = useState(false);
+  const [paywall, setPaywall] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [photo, setPhoto] = useState<Prepared | null>(null);
   const [reference, setReference] = useState<Prepared | null>(null);
   const [zone, setZone] = useState<(typeof BODY_ZONES)[number]>("antebrazo");
@@ -61,6 +71,37 @@ export function Wizard() {
   useEffect(() => {
     live.current?.focus();
   }, [step]);
+
+  // Saldo (si hay sesión) para avisar antes de gastar
+  useEffect(() => {
+    api<{ user: unknown; credits?: number }>("/api/me")
+      .then((m) => setCredits(m.user ? (m.credits ?? 0) : null))
+      .catch(() => {});
+  }, []);
+
+  const submit = useCallback(async () => {
+    if (!photo || !editor.current) return;
+    setError("");
+    setSubmitting(true);
+    try {
+      const form = new FormData();
+      form.set(
+        "options",
+        JSON.stringify({ zone, description: description.trim(), style, color, size, hasReference: Boolean(reference), placement }),
+      );
+      form.set("photo", photo.blob, "foto.jpg");
+      if (reference) form.set("reference", reference.blob, "referencia.jpg");
+      const mask = await editor.current.getMask();
+      if (mask) form.set("mask", mask, "mascara.png");
+      const { id } = await api<{ id: string }>("/api/jobs", { method: "POST", body: form });
+      router.push(`/crear/${id}`);
+    } catch (e) {
+      setSubmitting(false);
+      if (e instanceof ApiError && e.status === 401) setAuthOpen(true);
+      else if (e instanceof ApiError && e.status === 402) setPaywall(true);
+      else setError(e instanceof Error ? e.message : "Algo ha fallado. Inténtalo de nuevo");
+    }
+  }, [photo, zone, description, style, color, size, reference, placement, router]);
 
   const reset = () => {
     setStep(0);
@@ -243,13 +284,17 @@ export function Wizard() {
                     </div>
                   </div>
                 </div>
-                <div className="notice max-w-3xl">
-                  <p className="font-semibold">Aquí termina esta fase</p>
-                  <p>La generación con IA se activa en la fase siguiente. Tu colocación se queda en esta pantalla y puedes descargar cómo la has dejado.</p>
-                </div>
-                <div className="flex flex-wrap gap-3">
-                  <button className="btn btn-primary" onClick={async () => editor.current && downloadBlob(await editor.current.snapshot(), "calco-colocacion.png")}>Descargar mi colocación</button>
-                  <button className="btn btn-ghost" onClick={reset}>Empezar otra prueba</button>
+                <div className="grid max-w-3xl gap-4">
+                  <div className="flex flex-wrap items-center gap-3">
+                    <button className="btn btn-primary text-[1.05rem]" disabled={submitting} onClick={credits === 0 ? () => setPaywall(true) : submit}>
+                      {submitting ? "Enviando…" : "Generar mi tatuaje"}
+                    </button>
+                    <button className="btn btn-ghost" onClick={async () => editor.current && downloadBlob(await editor.current.snapshot(), "calco-colocacion.png")}>Descargar mi colocación</button>
+                    <button className="btn btn-quiet" onClick={reset}>Empezar otra prueba</button>
+                  </div>
+                  <p className="hint">
+                    {credits === null ? "Te pediremos entrar con tu email. Tienes 3 pruebas gratis." : `Usa 1 crédito. Te quedan ${credits}.`} Tus fotos se borran a las 24 horas.
+                  </p>
                 </div>
               </div>
             )}
@@ -272,6 +317,19 @@ export function Wizard() {
           </motion.section>
         </AnimatePresence>
       </div>
+      <Modal open={authOpen} onClose={() => setAuthOpen(false)} title="Entra para generar tu tatuaje">
+        <p className="text-bone/80">Así guardamos tu resultado y evitamos abusos de las pruebas gratuitas. Tu foto y tu colocación se quedan aquí.</p>
+        <AuthForm
+          compact
+          showGoogle={false}
+          turnstileSiteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITEKEY}
+          onSignedIn={() => {
+            setAuthOpen(false);
+            void submit();
+          }}
+        />
+      </Modal>
+      <Paywall open={paywall} onClose={() => setPaywall(false)} />
     </MotionConfig>
   );
 }

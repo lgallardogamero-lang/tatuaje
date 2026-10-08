@@ -121,9 +121,11 @@ export async function upsertUser(rawEmail: string): Promise<User> {
 async function grantFreeCredits(userId: string) {
   const jar = await cookies();
   const device = jar.get(DEVICE_COOKIE)?.value ?? randomToken(16);
-  const ipOk = await hit(`grant:ip:${await ipHash()}`, LIMITS.signupPerIpPerMonth, 30 * 24 * 3600_000);
+  // Solo para desarrollo y pruebas e2e: nunca se define en producción.
+  const relaxed = getEnv().DISABLE_ABUSE_LIMITS === "1";
+  const ipOk = relaxed || (await hit(`grant:ip:${await ipHash()}`, LIMITS.signupPerIpPerMonth, 30 * 24 * 3600_000));
   // Un dispositivo (cookie) solo recibe las pruebas gratis una vez; la ventana enorme equivale a "para siempre".
-  const deviceOk = await hit(`grant:dev:${device}`, 1, 3650 * 24 * 3600_000);
+  const deviceOk = relaxed || (await hit(`grant:dev:${device}`, 1, 3650 * 24 * 3600_000));
   jar.set(DEVICE_COOKIE, device, {
     httpOnly: true,
     sameSite: "lax",

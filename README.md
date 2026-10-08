@@ -1,6 +1,6 @@
 # Calco: pruébate el tatuaje antes de hacértelo
 
-Aplicación web que simula cómo quedaría un tatuaje sobre la foto de tu piel. Estado actual: **Fase 1 completa** (landing, foto, diseño y editor de colocación, sin IA) más el backend de las fases 2-4 sin interfaz completa. Ver `DECISIONES.md` y `docs/PROGRESO.md`.
+Aplicación web que simula cómo quedaría un tatuaje sobre la foto de tu piel. Estado actual: **fases 1, 2 y 3 completas con proveedor de IA simulado** (landing, asistente, generación, resultado antes/después), y parte de la 4 (créditos, marca de agua, stencil, cuenta). Ver `DECISIONES.md` y `docs/PROGRESO.md`.
 
 ## Arrancar en local
 ```bash
@@ -11,10 +11,12 @@ npm run dev                   # http://localhost:3000
 ```
 En local no se envía ningún correo ni se llama a ninguna IA: el enlace de acceso aparece en pantalla y el proveedor de imágenes es simulado (`PROVIDER=mock`). **No cuesta nada.**
 
+Si cambias una migración antes de desplegar, recrea la base local: `rm -rf .wrangler/state && npm run db:migrate:local`.
+
 ## Pruebas
 ```bash
 npm test            # lógica: créditos, trabajos, Stripe, moderación (27 pruebas)
-npm run test:e2e    # navegador real, escritorio y móvil (8 pruebas; requiere `npm run dev` en marcha)
+npm run test:e2e    # navegador real, escritorio y móvil (10 pruebas; requiere `npm run dev` en marcha)
 npm run typecheck
 ```
 

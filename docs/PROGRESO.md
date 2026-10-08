@@ -30,4 +30,9 @@ Se actualiza en cada hito. Nada de lo hecho hasta ahora ha costado dinero.
 - [x] **Fase 1 completa:** asistente de foto, diseño y colocación (editor con gestos táctiles, rueda, teclado y pincel de máscara), 3 propuestas visuales, `DECISIONES.md`
 - [x] Acceso por enlace mágico con interfaz, cuenta mínima (créditos, movimientos, borrar fotos, eliminar cuenta), páginas legales en borrador, página provisional de estudios
 - [x] 27 pruebas de lógica + 8 de navegador (escritorio y móvil), compilación de producción correcta
-- [ ] Parado aquí por indicación. Siguiente: Fase 2 (generación con la interfaz completa) cuando lo confirmes
+- [x] **Fases 2 y 3 (con proveedor simulado):** generación de diseño y variantes desde la interfaz, progreso con animación, cancelar y recuperar el crédito, resultado con deslizador antes/después, regenerar, acceso en la misma pantalla (el enlace se puede abrir en otra pestaña), aviso de pago al quedarse sin créditos
+- [x] **Parte de la Fase 4:** quitar marca de agua y stencil con créditos o tarjeta, historial de pruebas y movimientos, borrado de fotos y de cuenta
+- [x] 27 pruebas de lógica + 10 de navegador (escritorio y móvil, incluye el flujo completo de generación)
+- [ ] Pendiente Fase 4: probar pagos contra Stripe real (necesita claves), facturas con Stripe Tax
+- [ ] Pendiente Fase 5: estudios (cuentas, suscripción, modo estudio, marca blanca, widget, directorio) y panel de administración
+- [ ] Pendiente Fase 6: `worker.ts` para la cola y el borrado horario en Cloudflare, límites de peticiones en Cloudflare, despliegue

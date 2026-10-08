@@ -116,3 +116,62 @@ test("acceso por enlace mágico y cuenta", async ({ page }) => {
   await page.getByRole("button", { name: "Cerrar sesión" }).click();
   await expect(page).toHaveURL(/\/$/);
 });
+
+test("generación completa: entrar, generar, comparar, quitar marca y paywall", async ({ page }, info) => {
+  test.setTimeout(120_000);
+  const email = `gen-${info.project.name}-${Date.now()}@example.com`;
+  await page.goto("/crear");
+  await page.getByTestId("photo-input").setInputFiles(foto);
+  await expect(page.getByText(/Foto lista/)).toBeVisible();
+  await page.getByRole("button", { name: "Continuar con el diseño" }).click();
+  await page.getByLabel("Descríbelo").fill("Un lobo geométrico en línea fina");
+  await page.getByRole("button", { name: "Continuar con la colocación" }).click();
+  await expect(page.getByRole("application")).toBeVisible();
+
+  // Sin sesión: aparece el acceso dentro de la misma pantalla
+  await page.getByRole("button", { name: "Generar mi tatuaje" }).click();
+  const dialogo = page.getByRole("dialog");
+  await expect(dialogo).toBeVisible();
+  await dialogo.getByLabel("Email").fill(email);
+  await dialogo.getByLabel("Soy mayor de edad.").check();
+  await dialogo.getByLabel(/He leído el aviso de privacidad/).check();
+  await dialogo.getByRole("button", { name: "Enviarme el enlace" }).click();
+  const href = await dialogo.getByTestId("dev-link").getAttribute("href");
+
+  // El enlace se abre en OTRA pestaña; esta detecta la sesión y continúa sola
+  const otra = await page.context().newPage();
+  await otra.goto(href!);
+  await otra.waitForLoadState("networkidle");
+  await otra.getByRole("button", { name: "Entrar", exact: true }).click();
+  await expect(otra).toHaveURL(/\/crear$/);
+  await otra.close();
+
+  await expect(page).toHaveURL(/\/crear\/[0-9a-f-]{36}$/, { timeout: 30_000 });
+  await expect(page.getByRole("heading", { name: "Así te queda" })).toBeVisible({ timeout: 45_000 });
+
+  // Pruebas gratis: 1 variante y marca de agua
+  await expect(page.getByRole("tab")).toHaveCount(0);
+  await expect(page.getByRole("slider", { name: /Comparar tu foto/ })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Descargar con marca de agua" })).toBeVisible();
+  // las imágenes del resultado deben cargarse de verdad (no solo existir en el DOM)
+  await expect
+    .poll(() => page.evaluate(() => [...document.querySelectorAll("img")].filter((i) => i.src.includes("/files/")).map((i) => i.complete && i.naturalWidth > 0)))
+    .toEqual([true, true]);
+  await page.evaluate(() => Promise.all([...document.querySelectorAll("img")].map((i) => i.decode().catch(() => {}))));
+  const caja = await page.getByRole("slider", { name: /Comparar tu foto/ }).locator("xpath=..").boundingBox();
+  expect(caja!.height, "la zona de comparación debe tener altura").toBeGreaterThan(100);
+  await page.screenshot({ path: `screenshots/fase2-resultado-${info.project.name}.png` });
+
+  const [d1] = await Promise.all([page.waitForEvent("download"), page.getByRole("button", { name: "Descargar con marca de agua" }).click()]);
+  expect(d1.suggestedFilename()).toBe("calco-tatuaje-1.png");
+
+  // Quitar la marca de agua con créditos (2 de los 2 que quedan)
+  await page.getByRole("button", { name: "2 créditos" }).first().click();
+  await expect(page.getByRole("button", { name: "Descargar en alta resolución" })).toBeVisible();
+
+  // Sin créditos: regenerar abre el paywall; el pago no está configurado en local
+  await page.getByRole("button", { name: /Regenerar/ }).click();
+  await expect(page.getByRole("dialog")).toContainText("Te has quedado sin créditos");
+  await page.getByRole("button", { name: /30\s*créditos/ }).click();
+  await expect(page.getByRole("dialog").getByRole("alert")).toContainText("pagos aún no están activados");
+});

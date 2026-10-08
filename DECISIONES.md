@@ -7,8 +7,8 @@ Cada punto indica qué se decidió, por qué y cómo cambiarlo. Ordenadas de má
 - **Decisión:** se mantiene **Cloudflare** (Workers con OpenNext, D1, R2, Queues) porque ya está construido y probado sobre él y tienes la cuenta. Cambiar ahora costaría rehacer la capa de datos, el almacenamiento y la cola.
 - **Si prefieres Vercel + Supabase:** el acoplamiento está concentrado en `src/lib/db.ts` (D1), `src/lib/storage.ts` (R2), `src/lib/env.ts`, `src/lib/jobs.ts` (cola) y `wrangler.jsonc`/`worker.ts`. Es una migración de 1-2 días, no una reescritura. Dímelo y la hago.
 
-## 2. Alcance: parado tras la Fase 1
-- Como pediste, la parte visible llega hasta la Fase 1 (landing, foto, diseño, editor de máscara y colocación, sin IA).
+## 2. Alcance: fases 1, 2 y 3 hechas (con IA simulada); resto pendiente
+- Confirmaste Cloudflare y el proveedor simulado, así que se hicieron las fases 2 y 3 juntas (el trabajo de IA genera diseño y variantes en una sola cadena). Estudios, administración y despliegue siguen pendientes.
 - **Ojo:** antes de recibir ese límite ya estaba hecho el backend de las fases 2-4 (créditos, trabajos con proveedor simulado, Stripe, borrado a 24 h) con 27 pruebas. No tiene interfaz completa: faltan la pantalla de resultado, la cuenta y el panel de estudios. Nada de B2B ni administración está construido más allá del esquema de base de datos.
 
 - También se han añadido, aunque son de fases posteriores, páginas mínimas para que ningún enlace dé 404: `/cuenta` (créditos, movimientos, borrar fotos y cuenta; la privacidad lo exigía) y `/estudios` (solo informativa, con los planes previstos y un aviso de "muy pronto").
@@ -41,7 +41,10 @@ Cada punto indica qué se decidió, por qué y cómo cambiarlo. Ordenadas de má
 - Envío de email real (Resend), Google OAuth, Stripe (webhook probado en tests con firmas simuladas, no contra Stripe), Turnstile, proveedor de IA real, marca de agua en imágenes rasterizadas (el proveedor real devuelve PNG y falta el binding de Cloudflare Images), conversión de la máscara al formato "transparente = editar" que pide OpenAI.
 - En desarrollo el correo se imprime por consola y el enlace de acceso aparece en pantalla.
 
-## 11. Otros
+## 11. Variable `DISABLE_ABUSE_LIMITS`
+- Solo para local y pruebas: desactiva el límite de pruebas gratis por IP y dispositivo (si no, las pruebas e2e agotarían el límite de 3 cuentas por IP). Está en `.dev.vars`. **Nunca debe definirse en producción.**
+
+## 12. Otros
 - TypeScript fijado en 5.9 y `next.config.mjs`: Next 15 no soporta TypeScript 7.
 - Las muestras de la galería y el proveedor simulado son ilustraciones SVG generadas por código; no representan la calidad de la IA real. Para una landing definitiva conviene sustituirlas por resultados reales.
 - Retención: las fotos subidas se borran a las 24 h siempre; los resultados comprados se conservan 30 días.
