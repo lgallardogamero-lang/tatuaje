@@ -1,0 +1,48 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8"><link rel="stylesheet" href="../lib/brand.css"><style>
+.title { position:absolute; left:40px; right:40px; top:70px; font-size:48px; color:#ece7dc; text-shadow:0 2px 18px rgba(0,0,0,.55); }
+.layer { position:absolute; inset:0; background-size:cover; background-position:center; }
+.lbl { position:absolute; top:760px; }
+.scan { position:absolute; left:0; right:0; height:3px; background:#a58bff; box-shadow:0 0 22px 6px rgba(165,139,255,.7); }
+</style></head><body><div class="stage" id="stage" style="width:540px;height:960px">
+  <div class="layer" style="background-image:url(../assets/brazo-giro.jpg)"></div>
+  <div class="layer" id="sleeve" style="background-image:url(../assets/brazo-manga.jpg)"></div>
+  <div class="scan" id="scan" style="opacity:0"></div>
+  <div class="handle" id="handle" style="opacity:0"></div>
+  <div class="knob" id="knob" style="opacity:0;top:480px"><svg width="22" height="22" viewBox="0 0 18 18" fill="none"><path d="M6 4 L2 9 L6 14 M12 4 L16 9 L12 14" stroke="#ece7dc" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+  <div class="scrim-top"></div><div class="scrim-bot"></div>
+  <div class="title display" id="t1">Esto es mi brazo.</div>
+  <div class="title display" id="t2" style="opacity:0">¿Y si me hiciera una manga así?</div>
+  <div class="title display" id="t3" style="opacity:0">No es de verdad.<br><span style="color:#b9a6ff">Pero casi.</span></div>
+  <div class="lbl chip" id="lb" style="left:40px;opacity:0">Antes</div>
+  <div class="lbl chip" id="la" style="right:40px;opacity:0">Después</div>
+  <div class="abs" id="tag" style="left:40px;bottom:96px;opacity:0"><span class="chip">Simulación con IA · diseño de ejemplo</span></div>
+  <div class="abs" id="fade" style="inset:0;background:#0e1014;opacity:1"></div>
+</div>
+<script src="../lib/anim.js"></script><script>
+window.DURATION = 14;
+const $ = (id) => document.getElementById(id);
+window.render = (t) => {
+  $("fade").style.opacity = Math.max(1 - E.out(seg(t, 0, 0.5)), E.in(seg(t, 13.5, 14)));
+  reveal($("t1"), t, 0.4, 1.1); $("t1").style.opacity = Math.min(+$("t1").style.opacity, 1 - seg(t, 2.6, 3.0));
+  reveal($("t2"), t, 3.0, 3.8); $("t2").style.opacity = Math.min(+$("t2").style.opacity, 1 - seg(t, 7.6, 8.0));
+  reveal($("t3"), t, 11.4, 12.2); $("t3").style.opacity = Math.min(+$("t3").style.opacity, 1 - seg(t, 13.5, 13.9));
+  // 3.2-7.4: el diseño se va colocando de arriba abajo
+  const p = E.io(seg(t, 3.2, 7.4));
+  let clip = `inset(0 0 ${100 - p * 100}% 0)`;
+  const scanOn = t > 3.2 && t < 7.5;
+  $("scan").style.opacity = scanOn ? 1 : 0; $("scan").style.top = p * 960 + "px";
+  // 8.4-11.6: antes/después
+  let pos = 100;
+  if (t >= 8.4) pos = t < 9.6 ? lerp(100, 18, E.io(seg(t, 8.4, 9.6))) : t < 10.5 ? lerp(18, 82, E.io(seg(t, 9.6, 10.5))) : lerp(82, 30, E.io(seg(t, 10.5, 11.5)));
+  if (t > 11.5) pos = 30;
+  if (t >= 8.4 && t < 12.6) clip = `inset(0 0 0 ${pos}%)`;
+  else if (t >= 12.6) clip = "inset(0 0 0 0)"; else if (t >= 7.5) clip = "inset(0 0 0 0)";
+  $("sleeve").style.clipPath = clip;
+  const hOp = E.soft(seg(t, 8.2, 8.6)) * (1 - E.soft(seg(t, 12.2, 12.6)));
+  $("handle").style.opacity = hOp; $("knob").style.opacity = hOp;
+  $("handle").style.left = `${pos / 100 * 540}px`; $("knob").style.left = `${pos / 100 * 540}px`;
+  $("lb").style.opacity = hOp; $("la").style.opacity = hOp;
+  $("tag").style.opacity = E.out(seg(t, 12.2, 12.8)) * (1 - E.in(seg(t, 13.5, 13.9)));
+};
+window.render(0);
+</script></body></html>
