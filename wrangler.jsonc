@@ -18,7 +18,7 @@
   "vars": {
     "APP_URL": "http://localhost:3000",
     "PROVIDER": "mock",
-    "QUEUE_MODE": "inline",
+    "QUEUE_MODE": "queue",
     "EMAIL_PROVIDER": "console"
   }
 }

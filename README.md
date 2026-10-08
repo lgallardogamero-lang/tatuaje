@@ -30,9 +30,20 @@ El administrador da de alta el estudio (`/admin/estudios`) con su responsable y 
 ## Estructura
 - `src/app` páginas y rutas de la API · `src/components` interfaz · `src/lib` lógica (auth, créditos, trabajos, Stripe, moderación) · `src/lib/providers` proveedores de IA tras una interfaz común · `src/prompts` plantillas de prompt versionadas · `migrations` esquema D1 · `docs` diseño técnico.
 
-## Desplegar en Cloudflare (cuando decidas)
-1. `wrangler d1 create tatuaje` y pega el `database_id` en `wrangler.jsonc`; crea el bucket R2 y la cola.
-2. Secretos: `wrangler secret put SESSION_SECRET` (y los de `.env.example` que vayas usando).
-3. `npm run db:migrate:remote` y `npm run deploy`.
+## Desplegar en Cloudflare
+Probado hasta donde se puede sin tu cuenta: `npx opennextjs-cloudflare build` compila y `npx wrangler deploy --dry-run` valida el Worker (1,6 MiB comprimido, con la cola y la tarea horaria). **No se ha desplegado nunca.**
 
-Pendiente antes de producción: `worker.ts` (consumidor de la cola y tarea de borrado horario), claves reales y revisión legal. Detalle en `DECISIONES.md`.
+1. `npx wrangler login`, y crea los recursos:
+   ```bash
+   npx wrangler d1 create tatuaje          # pega el database_id en wrangler.jsonc
+   npx wrangler r2 bucket create tatuaje-uploads
+   npx wrangler queues create tatuaje-jobs
+   ```
+2. En `wrangler.jsonc`, cambia `APP_URL` por tu dominio (con `https://`). Deja `QUEUE_MODE` en `queue`.
+3. Secretos (`npx wrangler secret put NOMBRE`): `SESSION_SECRET` (cadena aleatoria larga), `ADMIN_EMAILS` (tu email) y, según vayas activando servicios, `RESEND_API_KEY` + `EMAIL_FROM` (y `EMAIL_PROVIDER=resend`), `STRIPE_SECRET_KEY` + `STRIPE_WEBHOOK_SECRET`, `GOOGLE_CLIENT_ID` + `GOOGLE_CLIENT_SECRET`, `TURNSTILE_SECRET` (y `NEXT_PUBLIC_TURNSTILE_SITEKEY` al compilar), `OPENAI_API_KEY` (y `PROVIDER=openai`).
+4. `npm run db:migrate:remote` y `npm run deploy`. Asocia tu dominio al Worker desde el panel de Cloudflare.
+5. En R2, crea una regla de ciclo de vida que borre los objetos a las 24 h salvo el prefijo `org/` (catálogos de estudios): es la segunda garantía de borrado, además de la tarea horaria.
+6. En Cloudflare, añade reglas de Rate Limiting delante de `/api/auth/*` y `/api/jobs` como defensa extra.
+7. En Stripe, crea el webhook hacia `https://TU-DOMINIO/api/stripe/webhook` con los eventos `checkout.session.completed`, `checkout.session.async_payment_succeeded`, `checkout.session.expired`, `customer.subscription.updated`, `customer.subscription.deleted` e `invoice.payment_failed`.
+
+**Antes de abrirlo al público:** `PROVIDER=mock` genera dibujos de ejemplo, no tatuajes reales, y `DISABLE_ABUSE_LIMITS` no debe existir en producción. Comprueba también la revisión legal pendiente (ver `DECISIONES.md`).
