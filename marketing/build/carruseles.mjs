@@ -21,9 +21,9 @@ body{width:540px;height:675px;overflow:hidden;font-family:"Hanken Grotesk",sans-
 .art.dk svg *{stroke:#ece7dc}
 .tag{display:inline-block;margin-top:20px;padding:7px 14px;border:1px solid currentColor;border-radius:99px;font-size:13px;font-weight:700;opacity:.7}
 .lg{display:inline-flex;align-items:center;gap:7px;opacity:1}.lg b{font-family:"Gloock",serif;font-size:20px;font-weight:400}.foot{opacity:.9}
-.arm{position:relative;width:100%;height:300px;border-radius:14px;overflow:hidden;margin-bottom:22px;background:linear-gradient(90deg,#6b402b 0%,#a56d4c 10%,#d39a77 26%,#e6b595 40%,#d49d79 58%,#b27a57 78%,#8a5a3d 92%,#5d3724 100%)}
-.arm::after{content:"";position:absolute;inset:0;background:radial-gradient(ellipse 60% 45% at 38% 30%,rgba(255,242,230,.28),rgba(255,242,230,0) 70%)}
-.armtat{position:absolute;left:50%;top:50%;width:280px;height:280px;margin:-140px 0 0 -140px;z-index:1}
+.arm{position:relative;width:100%;height:300px;border-radius:14px;overflow:hidden;margin-bottom:22px;background:url("file://${root}/assets/brazo.jpg") 50% 62% / 100% auto no-repeat}
+.arm::after{display:none;content:"";position:absolute;inset:0;background:radial-gradient(ellipse 60% 45% at 38% 30%,rgba(255,242,230,.28),rgba(255,242,230,0) 70%)}
+.armtat{position:absolute;left:51%;top:50%;width:210px;height:210px;margin:-105px 0 0 -105px;z-index:1}.armtat svg{mix-blend-mode:multiply}
 .armlab{position:absolute;left:12px;bottom:12px;z-index:2;font-size:12px;font-weight:700;color:#ece7dc;background:rgba(14,16,20,.74);padding:6px 11px;border-radius:99px}
 .vio .lg svg path:first-child{stroke:#0e1014}.vio .lg svg circle{fill:#0e1014}.swipe{position:absolute;right:36px;bottom:26px;font-size:13px;font-weight:700}
 `;

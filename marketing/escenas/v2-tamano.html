@@ -6,14 +6,14 @@
 .dim::before, .dim::after { content:""; position:absolute; left:-8px; width:18px; height:2px; background:#ece7dc; }
 .dim::before { top:0 } .dim::after { bottom:0 }
 .dimlab { position:absolute; font-weight:800; font-size:26px; background:rgba(14,16,20,.82); border:1px solid rgba(236,231,220,.3); padding:6px 14px; border-radius:999px; white-space:nowrap; font-variant-numeric:tabular-nums; }
-.coin { position:absolute; width:144px; height:144px; border-radius:50%; background:radial-gradient(circle at 35% 30%, #f1dc9a, #c9a24e 60%, #8d6a26); box-shadow:0 8px 24px rgba(0,0,0,.35), inset 0 0 0 5px rgba(255,255,255,.18); display:grid; place-items:center; }
-.coin i { width:92px; height:92px; border-radius:50%; background:radial-gradient(circle at 35% 30%, #f4f4f6, #b9bcc4 70%, #8a8d96); display:grid; place-items:center; font-style:normal; font-weight:800; font-size:46px; color:#4a4d58; box-shadow:inset 0 0 0 2px rgba(0,0,0,.12); }
+.coin { position:absolute; width:73px; height:73px; border-radius:50%; background:radial-gradient(circle at 35% 30%, #f1dc9a, #c9a24e 60%, #8d6a26); box-shadow:0 8px 24px rgba(0,0,0,.35), inset 0 0 0 5px rgba(255,255,255,.18); display:grid; place-items:center; }
+.coin i { width:47px; height:47px; border-radius:50%; background:radial-gradient(circle at 35% 30%, #f4f4f6, #b9bcc4 70%, #8a8d96); display:grid; place-items:center; font-style:normal; font-weight:800; font-size:21px; color:#4a4d58; box-shadow:inset 0 0 0 2px rgba(0,0,0,.12); }
 </style></head><body><div class="stage" style="width:540px;height:960px">
   <div class="skin"></div>
   <div class="scrim-top"></div><div class="scrim-bot"></div>
   <div class="tattoo" id="tat"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="1024" height="1024"><polygon points="63.8,363.0 259.5,36.0 444.8,369.0" fill="none" stroke="#161616" stroke-width="1.8" stroke-linejoin="round"/><circle cx="256" cy="256" r="202.4" fill="none" stroke="#161616" stroke-width="1.4400000000000002" /><polygon points="178.1,407.1 164.1,113.0 425.8,248.0" fill="none" stroke="#161616" stroke-width="1.8" stroke-linejoin="round"/><circle cx="256" cy="256" r="156.4" fill="none" stroke="#161616" stroke-width="1.4400000000000002" stroke-dasharray="2 9" stroke-linecap="round"/><polygon points="325.7,353.7 136.6,267.5 305.8,146.8" fill="none" stroke="#161616" stroke-width="1.8" stroke-linejoin="round"/><circle cx="256" cy="256" r="110.4" fill="none" stroke="#161616" stroke-width="1.4400000000000002" /><polygon points="186.2,250.9 295.3,198.1 286.5,319.0" fill="none" stroke="#161616" stroke-width="1.8" stroke-linejoin="round"/><circle cx="256" cy="256" r="64.4" fill="none" stroke="#161616" stroke-width="1.4400000000000002" stroke-dasharray="2 9" stroke-linecap="round"/><line x1="286.0" y1="256.0" x2="471.0" y2="256.0" stroke="#161616" stroke-width="1.08" stroke-linecap="round" opacity="0.8"/><line x1="280.3" y1="273.6" x2="429.9" y2="382.4" stroke="#161616" stroke-width="1.08" stroke-linecap="round" opacity="0.8"/><line x1="265.3" y1="284.5" x2="322.4" y2="460.5" stroke="#161616" stroke-width="1.08" stroke-linecap="round" opacity="0.8"/><line x1="246.7" y1="284.5" x2="189.6" y2="460.5" stroke="#161616" stroke-width="1.08" stroke-linecap="round" opacity="0.8"/><line x1="231.7" y1="273.6" x2="82.1" y2="382.4" stroke="#161616" stroke-width="1.08" stroke-linecap="round" opacity="0.8"/><line x1="226.0" y1="256.0" x2="41.0" y2="256.0" stroke="#161616" stroke-width="1.08" stroke-linecap="round" opacity="0.8"/><line x1="231.7" y1="238.4" x2="82.1" y2="129.6" stroke="#161616" stroke-width="1.08" stroke-linecap="round" opacity="0.8"/><line x1="246.7" y1="227.5" x2="189.6" y2="51.5" stroke="#161616" stroke-width="1.08" stroke-linecap="round" opacity="0.8"/><line x1="265.3" y1="227.5" x2="322.4" y2="51.5" stroke="#161616" stroke-width="1.08" stroke-linecap="round" opacity="0.8"/><line x1="280.3" y1="238.4" x2="429.9" y2="129.6" stroke="#161616" stroke-width="1.08" stroke-linecap="round" opacity="0.8"/><circle cx="256" cy="256" r="14" fill="#161616" stroke="#161616" stroke-width="1.8"/></svg></div>
   <div class="dim" id="dim"></div><div class="dimlab" id="dimlab"></div>
-  <div class="coin" id="coin" style="left:30px;top:676px"><i>2 €</i></div>
+  <div class="coin" id="coin" style="left:264px;top:620px"><i>2 €</i></div>
   <div class="chip" id="coinlab" style="position:absolute;left:30px;top:830px">Moneda de 2 €: 2,6 cm</div>
   <div class="big display" id="title">Lo que nadie te dice del tamaño de un tatuaje</div>
   <div class="capt display" id="c1" style="opacity:0">3 cm: apenas más que una moneda.</div>
@@ -31,7 +31,7 @@
 <script src="../lib/anim.js"></script><script>
 window.DURATION = 18;
 const $ = (id) => document.getElementById(id);
-const PX = 56, CX = 262, CY = 392;                           // 56 px = 1 cm
+const PX = 28, CX = 300, CY = 400;                           // 28 px = 1 cm (el antebrazo mide ~9,5 cm de ancho en la foto)
 const svgEl = $("tat").querySelector("svg");
 const bb = svgEl.getBBox(); const RATIO = Math.max(bb.width, bb.height) / 512; // fracción del lienzo que ocupa el dibujo (medida real)
 const ink = new Ink(svgEl, { boost: 1.6 });

@@ -6,14 +6,14 @@
 .dim::before, .dim::after { content:""; position:absolute; left:-8px; width:18px; height:2px; background:#ece7dc; }
 .dim::before { top:0 } .dim::after { bottom:0 }
 .dimlab { position:absolute; font-weight:800; font-size:26px; background:rgba(14,16,20,.82); border:1px solid rgba(236,231,220,.3); padding:6px 14px; border-radius:999px; white-space:nowrap; font-variant-numeric:tabular-nums; }
-.coin { position:absolute; width:144px; height:144px; border-radius:50%; background:radial-gradient(circle at 35% 30%, #f1dc9a, #c9a24e 60%, #8d6a26); box-shadow:0 8px 24px rgba(0,0,0,.35), inset 0 0 0 5px rgba(255,255,255,.18); display:grid; place-items:center; }
-.coin i { width:92px; height:92px; border-radius:50%; background:radial-gradient(circle at 35% 30%, #f4f4f6, #b9bcc4 70%, #8a8d96); display:grid; place-items:center; font-style:normal; font-weight:800; font-size:46px; color:#4a4d58; box-shadow:inset 0 0 0 2px rgba(0,0,0,.12); }
+.coin { position:absolute; width:73px; height:73px; border-radius:50%; background:radial-gradient(circle at 35% 30%, #f1dc9a, #c9a24e 60%, #8d6a26); box-shadow:0 8px 24px rgba(0,0,0,.35), inset 0 0 0 5px rgba(255,255,255,.18); display:grid; place-items:center; }
+.coin i { width:47px; height:47px; border-radius:50%; background:radial-gradient(circle at 35% 30%, #f4f4f6, #b9bcc4 70%, #8a8d96); display:grid; place-items:center; font-style:normal; font-weight:800; font-size:21px; color:#4a4d58; box-shadow:inset 0 0 0 2px rgba(0,0,0,.12); }
 </style></head><body><div class="stage" style="width:540px;height:960px">
   <div class="skin"></div>
   <div class="scrim-top"></div><div class="scrim-bot"></div>
   <div class="tattoo" id="tat">__SVG:mandala__</div>
   <div class="dim" id="dim"></div><div class="dimlab" id="dimlab"></div>
-  <div class="coin" id="coin" style="left:30px;top:676px"><i>2 €</i></div>
+  <div class="coin" id="coin" style="left:264px;top:620px"><i>2 €</i></div>
   <div class="chip" id="coinlab" style="position:absolute;left:30px;top:830px">Moneda de 2 €: 2,6 cm</div>
   <div class="big display" id="title">Lo que nadie te dice del tamaño de un tatuaje</div>
   <div class="capt display" id="c1" style="opacity:0">3 cm: apenas más que una moneda.</div>
@@ -31,7 +31,7 @@
 <script src="../lib/anim.js"></script><script>
 window.DURATION = 18;
 const $ = (id) => document.getElementById(id);
-const PX = 56, CX = 262, CY = 392;                           // 56 px = 1 cm
+const PX = 28, CX = 300, CY = 400;                           // 28 px = 1 cm (el antebrazo mide ~9,5 cm de ancho en la foto)
 const svgEl = $("tat").querySelector("svg");
 const bb = svgEl.getBBox(); const RATIO = Math.max(bb.width, bb.height) / 512; // fracción del lienzo que ocupa el dibujo (medida real)
 const ink = new Ink(svgEl, { boost: 1.6 });

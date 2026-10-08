@@ -1,6 +1,6 @@
 <!doctype html><html lang="es"><head><meta charset="utf-8"><link rel="stylesheet" href="../lib/brand.css"><style>
 .big { position:absolute; left:40px; right:40px; top:84px; font-size:44px; text-shadow:0 2px 18px rgba(0,0,0,.5); }
-.tattoo { left:20px; top:150px; width:500px; height:500px; }
+.tattoo { left:130px; top:250px; width:340px; height:340px; }
 .card { position:absolute; left:28px; right:28px; top:640px; border-radius:20px; background:rgba(22,25,34,.94); border:1px solid rgba(236,231,220,.14); padding:18px 18px 16px; box-shadow:0 18px 50px rgba(0,0,0,.45); }
 .av { width:42px; height:42px; border-radius:50%; background:linear-gradient(135deg,#a58bff,#6f55d6); flex:none; }
 .cm { font-size:24px; font-weight:600; line-height:1.3; min-height:64px; margin-top:12px; }
@@ -10,7 +10,7 @@
 </style></head><body><div class="stage" style="width:540px;height:960px">
   <div class="skin"></div>
   <div class="scrim-top"></div><div class="scrim-bot"></div>
-  <div class="tattoo" id="tat">__SVG:rama__</div>
+  <div class="tattoo" id="tat">__SVG:leon__</div>
   <div class="big display" id="title">Comenta un tatuaje y te lo pruebo en mi brazo</div>
   <div class="chip" id="ast" style="position:absolute;left:40px;top:222px;opacity:0">*en foto, no de verdad</div>
   <div class="card" id="card" style="opacity:0">
@@ -31,7 +31,7 @@
 window.DURATION = 18;
 const $ = (id) => document.getElementById(id);
 const ink = new Ink($("tat").querySelector("svg"), { boost: 1.7 });
-const TEXT = "una ramita fina en el antebrazo";
+const TEXT = "un león con melena en el antebrazo";
 window.render = (t) => {
   $("fade").style.opacity = Math.max(1 - E.out(seg(t, 0, 0.5)), E.in(seg(t, 17.5, 18)));
   reveal($("title"), t, 0.4, 1.2); $("title").style.opacity = Math.min(+$("title").style.opacity, 1 - seg(t, 14.0, 14.4));
